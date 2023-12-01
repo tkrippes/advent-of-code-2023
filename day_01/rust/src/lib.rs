@@ -4,35 +4,31 @@ use std::fs;
 use calibration_value::CalibrationValue;
 
 pub fn part_1(file_name: &str) -> u32 {
-    let file_content = fs::read_to_string(file_name).expect("input file should be located in input folder");
-    let file_lines: Vec<&str> = file_content.split("\n").collect();
-
-    let mut calibration_values: Vec<CalibrationValue> = Vec::new();
-    for line in &file_lines {
-        let calibration_value = CalibrationValue::try_build(line, false);
-
-        if calibration_value.is_some() {
-            calibration_values.push(calibration_value.unwrap());
-        }
-    }
+    let calibration_values = get_calibration_values(file_name, false);
 
     return calibration_values.iter().map(|calibration_value| calibration_value.get_value()).sum();
 }
 
 pub fn part_2(file_name: &str) -> u32 {
+    let calibration_values = get_calibration_values(file_name, true);
+
+    return calibration_values.iter().map(|calibration_value| calibration_value.get_value()).sum();
+}
+
+fn get_calibration_values(file_name: &str, consider_letters: bool) -> Vec<CalibrationValue> {
     let file_content = fs::read_to_string(file_name).expect("input file should be located in input folder");
     let file_lines: Vec<&str> = file_content.split("\n").collect();
 
     let mut calibration_values: Vec<CalibrationValue> = Vec::new();
     for line in &file_lines {
-        let calibration_value = CalibrationValue::try_build(line, true);
+        let calibration_value = CalibrationValue::try_build(line, consider_letters);
 
         if calibration_value.is_some() {
             calibration_values.push(calibration_value.unwrap());
         }
     }
 
-    return calibration_values.iter().map(|calibration_value| calibration_value.get_value()).sum();
+    calibration_values
 }
 
 #[cfg(test)]
