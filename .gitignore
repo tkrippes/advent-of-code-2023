@@ -1,0 +1,10 @@
+# Visual Studio Code
+.vscode
+**/.vscode
+
+# Jetbrains IDEs
+.idea
+**/.idea
+
+# Rust build folders
+**/target
