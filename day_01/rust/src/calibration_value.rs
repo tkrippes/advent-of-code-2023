@@ -68,12 +68,18 @@ impl CalibrationValue {
 
     fn find_first_indexed_letter_digit(input: &str) -> Option<IndexedDigit> {
         let mut first_indexed_digit: Option<IndexedDigit> = None;
+
         for (letter_digit, digit) in &Self::get_digit_map() {
-            if let Some(position) = input.find(letter_digit) {
-                // TODO further simplify
-                if first_indexed_digit.is_none() || position < first_indexed_digit.unwrap().index {
-                    first_indexed_digit = Some(IndexedDigit::build(*digit, position));
+            let position = input.find(letter_digit);
+
+            match (position, first_indexed_digit) {
+                (Some(position), Some(indexed_digit)) if position < indexed_digit.index => {
+                    first_indexed_digit = Some(IndexedDigit::build(*digit, position))
                 }
+                (Some(position), None) => {
+                    first_indexed_digit = Some(IndexedDigit::build(*digit, position))
+                }
+                (_, _) => (),
             }
         }
 
@@ -112,12 +118,18 @@ impl CalibrationValue {
 
     fn find_last_indexed_letter_digit(input: &str) -> Option<IndexedDigit> {
         let mut last_indexed_digit: Option<IndexedDigit> = None;
+
         for (letter_digit, digit) in &Self::get_digit_map() {
-            // TODO further simplify
-            if let Some(position) = input.rfind(letter_digit) {
-                if last_indexed_digit.is_none() || position > last_indexed_digit.unwrap().index {
-                    last_indexed_digit = Some(IndexedDigit::build(*digit, position));
+            let position = input.rfind(letter_digit);
+
+            match (position, last_indexed_digit) {
+                (Some(position), Some(indexed_digit)) if position > indexed_digit.index => {
+                    last_indexed_digit = Some(IndexedDigit::build(*digit, position))
                 }
+                (Some(position), None) => {
+                    last_indexed_digit = Some(IndexedDigit::build(*digit, position))
+                }
+                (_, _) => (),
             }
         }
 
