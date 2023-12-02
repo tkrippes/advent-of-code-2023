@@ -18,100 +18,110 @@ pub struct CalibrationValue {
 }
 
 impl CalibrationValue {
-    pub fn try_build(input: &str, consider_letters: bool) -> Option<Self> {
-        let mut first_digit = Self::find_first_digit(input);
+    pub fn try_build(input: &str, consider_letter_digits: bool) -> Option<Self> {
+        let first_indexed_digit = Self::find_first_indexed_digit(input, consider_letter_digits);
+        let last_indexed_digit = Self::find_last_indexed_digit(input, consider_letter_digits);
 
-        if consider_letters {
-            let first_letter_digit = Self::find_first_letter_digit(input);
-
-            first_digit = match (first_digit, first_letter_digit) {
-                (Some(digit), Some(letter_digit)) => {
-                    if digit.index < letter_digit.index {
-                        Some(digit)
-                    } else {
-                        Some(letter_digit)
-                    }
-                }
-                (Some(digit), None) => Some(digit),
-                (None, Some(letter_digit)) => Some(letter_digit),
-                (None, None) => None
-            };
-        }
-
-        let mut last_digit = Self::find_last_digit(input);
-
-        if consider_letters {
-            let last_letter_digit = Self::find_last_letter_digit(input);
-
-            last_digit = match (last_digit, last_letter_digit) {
-                (Some(digit), Some(letter_digit)) => {
-                    if digit.index > letter_digit.index {
-                        Some(digit)
-                    } else {
-                        Some(letter_digit)
-                    }
-                }
-                (Some(digit), None) => Some(digit),
-                (None, Some(letter_digit)) => Some(letter_digit),
-                (None, None) => None
-            };
-        }
-
-        if first_digit.is_some() && last_digit.is_some() {
-            Some(CalibrationValue { first_digit: first_digit.unwrap().digit, last_digit: last_digit.unwrap().digit })
+        if let (Some(first_indexed_digit), Some(last_indexed_digit)) =
+            (first_indexed_digit, last_indexed_digit)
+        {
+            Some(CalibrationValue {
+                first_digit: first_indexed_digit.digit,
+                last_digit: last_indexed_digit.digit,
+            })
         } else {
             None
         }
     }
 
-    fn find_first_digit(input: &str) -> Option<IndexedDigit> {
+    // TODO check if is possible to combine first and last indexed digit finders
+    fn find_first_indexed_digit(input: &str, consider_letter_digits: bool) -> Option<IndexedDigit> {
+        let mut first_indexed_digit: Option<IndexedDigit> = None;
+
         for (index, character) in input.chars().enumerate() {
-            if character.is_digit(10) {
-                return Some(IndexedDigit::build(character.to_digit(10).unwrap(), index));
+            if character.is_ascii_digit() {
+                first_indexed_digit =
+                    Some(IndexedDigit::build(character.to_digit(10).unwrap(), index));
+                break;
             }
         }
 
-        None
+        if consider_letter_digits {
+            let first_indexed_letter_digit = Self::find_first_indexed_letter_digit(input);
+
+            first_indexed_digit = match (first_indexed_digit, first_indexed_letter_digit) {
+                (Some(indexed_digit), Some(indexed_letter_digit)) => {
+                    if indexed_digit.index < indexed_letter_digit.index {
+                        Some(indexed_digit)
+                    } else {
+                        Some(indexed_letter_digit)
+                    }
+                }
+                (Some(indexed_digit), None) => Some(indexed_digit),
+                (None, Some(indexed_letter_digit)) => Some(indexed_letter_digit),
+                (None, None) => None,
+            };
+        }
+
+        first_indexed_digit
     }
 
-    fn find_first_letter_digit(input: &str) -> Option<IndexedDigit> {
-        let mut first_digit: Option<IndexedDigit> = None;
-        for (letter, digit) in &Self::get_digit_map() {
-            let position = input.find(letter);
-            if position.is_some() {
-                if first_digit.is_none() || position.unwrap() < first_digit.unwrap().index {
-                    first_digit = Some(IndexedDigit::build(*digit, position.unwrap()));
+    fn find_first_indexed_letter_digit(input: &str) -> Option<IndexedDigit> {
+        let mut first_indexed_digit: Option<IndexedDigit> = None;
+        for (letter_digit, digit) in &Self::get_digit_map() {
+            if let Some(position) = input.find(letter_digit) {
+                // TODO further simplify
+                if first_indexed_digit.is_none() || position < first_indexed_digit.unwrap().index {
+                    first_indexed_digit = Some(IndexedDigit::build(*digit, position));
                 }
             }
         }
 
-        first_digit
+        first_indexed_digit
     }
 
-    fn find_last_digit(input: &str) -> Option<IndexedDigit> {
-        let mut last_digit: Option<IndexedDigit> = None;
+    fn find_last_indexed_digit(input: &str, consider_letter_digits: bool) -> Option<IndexedDigit> {
+        let mut last_indexed_digit: Option<IndexedDigit> = None;
 
         for (index, character) in input.chars().enumerate() {
-            if character.is_digit(10) {
-                last_digit = Some(IndexedDigit::build(character.to_digit(10).unwrap(), index));
+            if character.is_ascii_digit() {
+                last_indexed_digit =
+                    Some(IndexedDigit::build(character.to_digit(10).unwrap(), index));
             }
         }
 
-        last_digit
+        if consider_letter_digits {
+            let last_indexed_letter_digit = Self::find_last_indexed_letter_digit(input);
+
+            last_indexed_digit = match (last_indexed_digit, last_indexed_letter_digit) {
+                (Some(indexed_digit), Some(letter_indexed_digit)) => {
+                    if indexed_digit.index > letter_indexed_digit.index {
+                        Some(indexed_digit)
+                    } else {
+                        Some(letter_indexed_digit)
+                    }
+                }
+                (Some(indexed_digit), None) => Some(indexed_digit),
+                (None, Some(letter_indexed_digit)) => Some(letter_indexed_digit),
+                (None, None) => None,
+            };
+        }
+
+        last_indexed_digit
     }
 
-    fn find_last_letter_digit(input: &str) -> Option<IndexedDigit> {
-        let mut last_digit: Option<IndexedDigit> = None;
-        for (letter, digit) in &Self::get_digit_map() {
-            let position = input.rfind(letter);
-            if position.is_some() {
-                if last_digit.is_none() || position.unwrap() > last_digit.unwrap().index {
-                    last_digit = Some(IndexedDigit::build(*digit, position.unwrap()));
+    fn find_last_indexed_letter_digit(input: &str) -> Option<IndexedDigit> {
+        let mut last_indexed_digit: Option<IndexedDigit> = None;
+        for (letter_digit, digit) in &Self::get_digit_map() {
+            // TODO further simplify
+            if let Some(position) = input.rfind(letter_digit) {
+                if last_indexed_digit.is_none() || position > last_indexed_digit.unwrap().index {
+                    last_indexed_digit = Some(IndexedDigit::build(*digit, position));
                 }
             }
         }
 
-        last_digit
+        last_indexed_digit
     }
 
     fn get_digit_map() -> HashMap<&'static str, u32> {
@@ -124,7 +134,7 @@ impl CalibrationValue {
             ("six", 6),
             ("seven", 7),
             ("eight", 8),
-            ("nine", 9)
+            ("nine", 9),
         ])
     }
 
