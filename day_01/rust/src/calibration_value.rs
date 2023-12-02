@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-#[derive(Copy, Clone)]
 struct IndexedDigit {
     digit: u32,
     index: usize,
@@ -71,7 +70,7 @@ impl CalibrationValue {
         for (letter_digit, digit) in &Self::get_digit_map() {
             let position = input.find(letter_digit);
 
-            match (position, first_indexed_digit) {
+            match (position, &first_indexed_digit) {
                 (Some(position), Some(indexed_digit)) if position < indexed_digit.index => {
                     first_indexed_digit = Some(IndexedDigit::build(*digit, position))
                 }
@@ -121,7 +120,7 @@ impl CalibrationValue {
         for (letter_digit, digit) in &Self::get_digit_map() {
             let position = input.rfind(letter_digit);
 
-            match (position, last_indexed_digit) {
+            match (position, &last_indexed_digit) {
                 (Some(position), Some(indexed_digit)) if position > indexed_digit.index => {
                     last_indexed_digit = Some(IndexedDigit::build(*digit, position))
                 }
