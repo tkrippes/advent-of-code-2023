@@ -34,7 +34,6 @@ impl CalibrationValue {
         }
     }
 
-    // TODO check if is possible to combine first and last indexed digit finders
     fn find_first_indexed_digit(input: &str, consider_letter_digits: bool) -> Option<IndexedDigit> {
         let mut first_indexed_digit: Option<IndexedDigit> = None;
 
