@@ -5,6 +5,3 @@
 # Jetbrains IDEs
 .idea
 **/.idea
-
-# Rust build folders
-**/target
