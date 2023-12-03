@@ -24,7 +24,7 @@ combining the `first digit` and the `last digit` (in that order) to form a singl
 
 For example:
 
-```
+```bash
 1abc2
 pqr3stu8vwx
 a1b2c3d4e5f
@@ -44,7 +44,7 @@ actually `spelled out with letters`: `one`, `two`,
 
 Equipped with this new information, you now need to find the real first and last digit on each line. For example:
 
-```
+```bash
 two1nine
 eightwothree
 abcone2threexyz
