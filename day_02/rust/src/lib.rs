@@ -1,11 +1,13 @@
 use std::fs;
 mod game;
-use game::Game;
+use game::{Cube, Game, Subset};
 
 pub fn part_1(file_name: &str) -> u32 {
+    let subset_limit = Subset::from([(Cube::Red, 12), (Cube::Green, 13), (Cube::Blue, 14)]);
+
     let games = get_games(file_name);
 
-    todo!()
+    get_sum_of_possible_game_ids(games, subset_limit)
 }
 
 pub fn part_2(file_name: &str) -> u32 {
@@ -25,6 +27,18 @@ fn get_games(file_name: &str) -> Vec<Game> {
     }
 
     games
+}
+
+fn get_sum_of_possible_game_ids(games: Vec<Game>, subset_limit: Subset) -> u32 {
+    let mut sum_of_possible_game_ids = 0;
+
+    for game in games {
+        if game.is_possible(&subset_limit) {
+            sum_of_possible_game_ids += game.get_id();
+        }
+    }
+
+    sum_of_possible_game_ids
 }
 
 #[cfg(test)]
