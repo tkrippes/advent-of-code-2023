@@ -11,7 +11,9 @@ pub fn part_1(file_name: &str) -> u32 {
 }
 
 pub fn part_2(file_name: &str) -> u32 {
-    todo!()
+    let games = get_games(file_name);
+
+    get_sum_of_power(games)
 }
 
 fn get_games(file_name: &str) -> Vec<Game> {
@@ -41,6 +43,16 @@ fn get_sum_of_possible_game_ids(games: Vec<Game>, subset_limit: Subset) -> u32 {
     sum_of_possible_game_ids
 }
 
+fn get_sum_of_power(games: Vec<Game>) -> u32 {
+    let mut power = 0;
+
+    for game in games {
+        power += game.get_power();
+    }
+
+    power
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -54,6 +66,6 @@ mod tests {
     #[test]
     fn test_input_part_2() {
         let result = part_2("../input/test_input.txt");
-        assert_eq!(result, 0);
+        assert_eq!(result, 2286);
     }
 }
