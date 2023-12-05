@@ -47,7 +47,19 @@ fn get_sum_of_power(games: Vec<Game>) -> u32 {
     let mut power = 0;
 
     for game in games {
-        power += game.get_power();
+        power += get_power(game);
+    }
+
+    power
+}
+
+fn get_power(game: Game) -> u32 {
+    let minimum_number_of_cubes = game.get_minimum_number_of_cubes();
+
+    let mut power = 1;
+
+    for amount in minimum_number_of_cubes.values() {
+        power *= amount;
     }
 
     power

@@ -141,19 +141,7 @@ impl Game {
         true
     }
 
-    pub fn get_power(&self) -> u32 {
-        let minimum_number_of_cubes = self.get_minimum_number_of_cubes();
-
-        let mut power = 1;
-
-        for amount in minimum_number_of_cubes.values() {
-            power *= amount;
-        }
-
-        power
-    }
-
-    fn get_minimum_number_of_cubes(&self) -> Subset {
+    pub fn get_minimum_number_of_cubes(&self) -> Subset {
         let mut subset_limit = Subset::from([(Cube::Red, 0), (Cube::Green, 0), (Cube::Blue, 0)]);
 
         for subset in &self.subsets {
