@@ -28,7 +28,7 @@ fn try_get_engine(file_name: &str) -> Option<Engine> {
 }
 
 fn get_sum_of_part_numbers(engine: Engine) -> u32 {
-    let part_numbers = engine.get_all_part_numbers();
+    let part_numbers = engine.get_valid_part_number_values();
 
     part_numbers.iter().sum()
 }

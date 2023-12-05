@@ -16,6 +16,13 @@ impl TryFrom<char> for Part {
     }
 }
 
+#[derive(PartialEq)]
+struct PartNumber {
+    value: u32,
+    row_index: usize,
+    column_indices: Vec<usize>,
+}
+
 pub struct Engine {
     schematic: Vec<Vec<Part>>,
 }
@@ -41,7 +48,39 @@ impl Engine {
         Some(Engine { schematic })
     }
 
-    pub fn get_all_part_numbers(&self) -> Vec<u32> {
-        todo!()
+    pub fn get_valid_part_number_values(&self) -> Vec<u32> {
+        let part_numbers = self.get_part_numbers();
+
+        part_numbers
+            .into_iter()
+            .filter(|part_number| self.is_valid_part_number(part_number))
+            .map(|part_number| part_number.value)
+            .collect()
+    }
+
+    fn get_part_numbers(&self) -> Vec<PartNumber> {
+        let mut part_numbers = Vec::new();
+
+        for (row_index, line) in self.schematic.iter().enumerate() {
+            for (column_index, part) in line.iter().enumerate() {
+                if let Part::Digit(_) = part {
+                    let part_number = self.get_part_number(row_index, column_index);
+
+                    if !part_numbers.contains(&part_number) {
+                        part_numbers.push(part_number);
+                    }
+                }
+            }
+        }
+
+        part_numbers
+    }
+
+    fn get_part_number(&self, row_index: usize, column_index: usize) -> PartNumber {
+        todo!("Search for first and last index, get all digits, then create PartNumber from that information")
+    }
+
+    fn is_valid_part_number(&self, part_number: &PartNumber) -> bool {
+        todo!("If any of the neighbours of any digit is a symbol, the part number is valid")
     }
 }
