@@ -16,7 +16,7 @@ impl TryFrom<char> for Part {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 struct PartNumber {
     value: u32,
     row_index: usize,
@@ -73,6 +73,8 @@ impl Engine {
             }
         }
 
+        println!("Part numbers: {:?}", part_numbers);
+
         part_numbers
     }
 
@@ -92,8 +94,8 @@ impl Engine {
         part_number_value_digits.reverse();
 
         // TODO improve search for last column index
-        let mut last_column_index = column_index;
-        while let Some(Part::Digit(n)) = row.get(last_column_index + 1) {
+        let mut last_column_index = column_index + 1;
+        while let Some(Part::Digit(n)) = row.get(last_column_index) {
             part_number_value_digits.push(n);
             if last_column_index == row.len() - 1 {
                 break;
