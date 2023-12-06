@@ -16,6 +16,7 @@ impl TryFrom<char> for Part {
     }
 }
 
+// TODO remove debug trait
 #[derive(Debug, PartialEq)]
 struct PartNumber {
     value: u32,
@@ -72,9 +73,6 @@ impl Engine {
                 }
             }
         }
-
-        // TODO remove (remove also debug traits)
-        println!("Part numbers: {:?}", part_numbers);
 
         part_numbers
     }
@@ -186,6 +184,9 @@ impl Engine {
     }
 
     fn is_valid_part_number(&self, part_number: &PartNumber) -> bool {
+        // TODO remove
+        println!("Part Number: {:?}", part_number);
+
         return self.has_adjacent_symbol(part_number);
     }
 
@@ -193,6 +194,12 @@ impl Engine {
         let neighbour_positions = self.get_neighbour_positions(part_number);
 
         for (neighbour_row, neighbour_column) in neighbour_positions {
+            // TODO remove
+            println!(
+                "Neighbour row: {}, column: {}",
+                neighbour_row, neighbour_column
+            );
+
             if let Part::Symbol(_) = self
                 .schematic
                 .get(neighbour_row)
@@ -208,26 +215,87 @@ impl Engine {
     }
 
     fn get_neighbour_positions(&self, part_number: &PartNumber) -> Vec<(usize, usize)> {
-        let max_row_index = self.schematic.len() - 1;
+        let all_possible_neighbour_positions =
+            self.get_all_possible_neighbour_positions(part_number);
 
-        let mut neighbour_positions = Vec::new();
+        let neighbour_positions =
+            self.get_valid_neighbour_positions(part_number, all_possible_neighbour_positions);
 
-        for column_index in &part_number.column_indices {
-            let max_column_index = self.schematic.get(*column_index).unwrap().len();
+        neighbour_positions
+    }
 
-            match (part_number.row_index, *column_index) {
-                (0, 0) => todo!(),
-                (0, max_column_index) => todo!(),
-                (max_row_index, 0) => todo!(),
-                (max_row_index, max_column_index) => todo!(),
-                (0, m) => todo!(),
-                (max_row_index, m) => todo!(),
-                (n, 0) => todo!(),
-                (n, max_column_index) => todo!(),
-                (n, m) => todo!(),
+    fn get_all_possible_neighbour_positions(&self, part_number: &PartNumber) -> Vec<(i32, i32)> {
+        let possible_row_indices = vec![
+            part_number.row_index as i32 - 1,
+            part_number.row_index as i32,
+            part_number.row_index as i32 + 1,
+        ];
+
+        let mut possible_column_indices =
+            vec![*part_number.column_indices.first().unwrap() as i32 - 1];
+        possible_column_indices = vec![
+            possible_column_indices,
+            part_number
+                .column_indices
+                .iter()
+                .map(|column_index| *column_index as i32)
+                .collect::<Vec<i32>>(),
+        ]
+        .concat();
+        possible_column_indices.push(*part_number.column_indices.last().unwrap() as i32 + 1);
+
+        let mut all_possible_neighbour_positions = Vec::new();
+
+        for row_index in &possible_row_indices {
+            for column_index in &possible_column_indices {
+                all_possible_neighbour_positions.push((*row_index, *column_index))
             }
         }
 
-        neighbour_positions
+        all_possible_neighbour_positions
+    }
+
+    fn get_valid_neighbour_positions(
+        &self,
+        part_number: &PartNumber,
+        all_possible_neighbour_positions: Vec<(i32, i32)>,
+    ) -> Vec<(usize, usize)> {
+        let mut valid_neighbour_positions = Vec::new();
+
+        for possible_neighbour_position in all_possible_neighbour_positions {
+            if self.is_inside_schematic(possible_neighbour_position)
+                && !self.is_in_part_number(part_number, possible_neighbour_position)
+            {
+                valid_neighbour_positions.push((
+                    possible_neighbour_position.0 as usize,
+                    possible_neighbour_position.1 as usize,
+                ))
+            }
+        }
+
+        valid_neighbour_positions
+    }
+
+    fn is_inside_schematic(&self, position: (i32, i32)) -> bool {
+        let max_row_index = self.schematic.len() - 1;
+        let max_column_index = self.schematic.first().unwrap().len() - 1;
+
+        if (position.0 >= 0 && position.0 <= max_column_index as i32)
+            && (position.1 >= 0 && position.1 <= max_row_index as i32)
+        {
+            true
+        } else {
+            false
+        }
+    }
+
+    fn is_in_part_number(&self, part_number: &PartNumber, position: (i32, i32)) -> bool {
+        let mut part_number_positions = Vec::new();
+
+        for column_index in &part_number.column_indices {
+            part_number_positions.push((part_number.row_index as i32, *column_index as i32));
+        }
+
+        part_number_positions.contains(&position)
     }
 }
