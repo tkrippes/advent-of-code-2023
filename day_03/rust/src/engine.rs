@@ -2,7 +2,6 @@ enum Part {
     Empty,
     Digit(u32),
     Symbol(char),
-    Gear,
 }
 
 impl TryFrom<char> for Part {
@@ -11,7 +10,6 @@ impl TryFrom<char> for Part {
         match value {
             '.' => Ok(Part::Empty),
             n @ '0'..='9' => Ok(Part::Digit(n.to_digit(10).unwrap())),
-            '*' => Ok(Part::Gear),
             c if c.is_ascii_punctuation() => Ok(Part::Symbol(c)),
             _ => Err(format!("Cannot parse Part from {}", value)),
         }
@@ -51,31 +49,110 @@ impl Engine {
     }
 
     pub fn get_valid_part_number_values(&self) -> Vec<u32> {
-        let part_numbers = self.get_part_numbers();
+        let symbol_positions = self.get_symbol_positions();
 
-        part_numbers
-            .into_iter()
-            .filter(|part_number| self.is_valid_part_number(part_number))
-            .map(|part_number| part_number.value)
-            .collect()
-    }
+        let mut adjacent_part_numbers = Vec::new();
 
-    fn get_part_numbers(&self) -> Vec<PartNumber> {
-        let mut part_numbers = Vec::new();
+        for symbol_position in symbol_positions {
+            let current_adjacent_part_numbers = self.get_adjacent_part_numbers(symbol_position);
 
-        for (row_index, line) in self.schematic.iter().enumerate() {
-            for (column_index, part) in line.iter().enumerate() {
-                if let Part::Digit(_) = part {
-                    let part_number = self.get_part_number(row_index, column_index);
-
-                    if !part_numbers.contains(&part_number) {
-                        part_numbers.push(part_number);
-                    }
+            for part_number in current_adjacent_part_numbers {
+                if !adjacent_part_numbers.contains(&part_number) {
+                    adjacent_part_numbers.push(part_number);
                 }
             }
         }
 
-        part_numbers
+        adjacent_part_numbers
+            .into_iter()
+            .map(|part_number| part_number.value)
+            .collect()
+    }
+
+    fn get_symbol_positions(&self) -> Vec<(usize, usize)> {
+        let mut symbol_positions = Vec::new();
+
+        for (row_index, row) in self.schematic.iter().enumerate() {
+            for (column_index, part) in row.iter().enumerate() {
+                if let Part::Symbol(_) = part {
+                    symbol_positions.push((row_index, column_index));
+                }
+            }
+        }
+
+        symbol_positions
+    }
+
+    fn get_adjacent_part_numbers(&self, position: (usize, usize)) -> Vec<PartNumber> {
+        let neighbour_positions = self.get_neighbour_positions(position);
+
+        let mut adjacent_part_numbers = Vec::new();
+
+        for (row_index, column_index) in neighbour_positions {
+            if let Some(Part::Digit(_)) = self.schematic.get(row_index).unwrap().get(column_index) {
+                let part_number = self.get_part_number(row_index, column_index);
+
+                if !adjacent_part_numbers.contains(&part_number) {
+                    adjacent_part_numbers.push(part_number);
+                }
+            }
+        }
+
+        adjacent_part_numbers
+    }
+
+    fn get_neighbour_positions(&self, position: (usize, usize)) -> Vec<(usize, usize)> {
+        let possible_neighbour_positions = self.get_all_possible_neighbour_positions(position);
+
+        let mut neighbour_positions = Vec::new();
+
+        for neighbour_position in possible_neighbour_positions {
+            if self.is_inside_schematic(neighbour_position) {
+                neighbour_positions
+                    .push((neighbour_position.0 as usize, neighbour_position.1 as usize));
+            }
+        }
+
+        neighbour_positions
+    }
+
+    fn get_all_possible_neighbour_positions(&self, position: (usize, usize)) -> Vec<(i32, i32)> {
+        let mut possible_neighbour_positions = Vec::new();
+
+        for row_index in [
+            position.0 as i32 - 1,
+            position.0 as i32,
+            position.0 as i32 + 1,
+        ] {
+            for column_index in [
+                position.1 as i32 - 1,
+                position.1 as i32,
+                position.1 as i32 + 1,
+            ] {
+                if !self.is_same_position(position, (row_index, column_index)) {
+                    possible_neighbour_positions.push((row_index, column_index));
+                }
+            }
+        }
+
+        possible_neighbour_positions
+    }
+
+    fn is_inside_schematic(&self, position: (i32, i32)) -> bool {
+        let max_row_index = self.schematic.len() - 1;
+        let max_column_index = self.schematic.first().unwrap().len() - 1;
+
+        if (position.0 >= 0 && position.0 <= max_column_index as i32)
+            && (position.1 >= 0 && position.1 <= max_row_index as i32)
+        {
+            true
+        } else {
+            false
+        }
+    }
+
+    fn is_same_position(&self, position_usize: (usize, usize), position_i32: (i32, i32)) -> bool {
+        position_usize.0 as i32 == position_i32.0 && position_usize.1 as i32 == position_i32.1
     }
 
     fn get_part_number(&self, row_index: usize, start_column_index: usize) -> PartNumber {
@@ -155,7 +232,6 @@ impl Engine {
         let mut last_part_number_value_digits = Vec::new();
         let mut last_part_number_value_digit_indices = Vec::new();
 
-        // TODO improve search
         let mut last_digit_column_index = start_column_index + 1;
         while let Some(Part::Digit(n)) = row.get(last_digit_column_index) {
             last_part_number_value_digits.push(*n);
@@ -184,145 +260,36 @@ impl Engine {
         part_number_value
     }
 
-    fn is_valid_part_number(&self, part_number: &PartNumber) -> bool {
-        self.has_adjacent_symbol(part_number)
-    }
-
-    fn has_adjacent_symbol(&self, part_number: &PartNumber) -> bool {
-        let neighbour_positions = self.get_neighbour_positions(part_number);
-
-        for (neighbour_row, neighbour_column) in neighbour_positions {
-            match self
-                .schematic
-                .get(neighbour_row)
-                .unwrap()
-                .get(neighbour_column)
-                .unwrap()
-            {
-                Part::Symbol(_) | Part::Gear => return true,
-                _ => continue,
-            }
-        }
-
-        false
-    }
-
-    fn get_neighbour_positions(&self, part_number: &PartNumber) -> Vec<(usize, usize)> {
-        let all_possible_neighbour_positions =
-            self.get_all_possible_neighbour_positions(part_number);
-
-        let neighbour_positions =
-            self.get_valid_neighbour_positions(part_number, all_possible_neighbour_positions);
-
-        neighbour_positions
-    }
-
-    fn get_all_possible_neighbour_positions(&self, part_number: &PartNumber) -> Vec<(i32, i32)> {
-        let possible_row_indices = vec![
-            part_number.row_index as i32 - 1,
-            part_number.row_index as i32,
-            part_number.row_index as i32 + 1,
-        ];
-
-        let mut possible_column_indices =
-            vec![*part_number.column_indices.first().unwrap() as i32 - 1];
-        possible_column_indices = vec![
-            possible_column_indices,
-            part_number
-                .column_indices
-                .iter()
-                .map(|column_index| *column_index as i32)
-                .collect::<Vec<i32>>(),
-        ]
-        .concat();
-        possible_column_indices.push(*part_number.column_indices.last().unwrap() as i32 + 1);
-
-        let mut all_possible_neighbour_positions = Vec::new();
-
-        for row_index in &possible_row_indices {
-            for column_index in &possible_column_indices {
-                all_possible_neighbour_positions.push((*row_index, *column_index))
-            }
-        }
-
-        all_possible_neighbour_positions
-    }
-
-    fn get_valid_neighbour_positions(
-        &self,
-        part_number: &PartNumber,
-        all_possible_neighbour_positions: Vec<(i32, i32)>,
-    ) -> Vec<(usize, usize)> {
-        let mut valid_neighbour_positions = Vec::new();
-
-        for possible_neighbour_position in all_possible_neighbour_positions {
-            if self.is_inside_schematic(possible_neighbour_position)
-                && !self.is_in_part_number(part_number, possible_neighbour_position)
-            {
-                valid_neighbour_positions.push((
-                    possible_neighbour_position.0 as usize,
-                    possible_neighbour_position.1 as usize,
-                ))
-            }
-        }
-
-        valid_neighbour_positions
-    }
-
-    fn is_inside_schematic(&self, position: (i32, i32)) -> bool {
-        let max_row_index = self.schematic.len() - 1;
-        let max_column_index = self.schematic.first().unwrap().len() - 1;
-
-        if (position.0 >= 0 && position.0 <= max_column_index as i32)
-            && (position.1 >= 0 && position.1 <= max_row_index as i32)
-        {
-            true
-        } else {
-            false
-        }
-    }
-
-    fn is_in_part_number(&self, part_number: &PartNumber, position: (i32, i32)) -> bool {
-        let mut part_number_positions = Vec::new();
-
-        for column_index in &part_number.column_indices {
-            part_number_positions.push((part_number.row_index as i32, *column_index as i32));
-        }
-
-        part_number_positions.contains(&position)
-    }
-
     pub fn get_gear_ratios(&self) -> Vec<u32> {
-        let part_numbers = self.get_part_numbers();
+        let gear_positions = self.get_gear_positions();
 
-        part_numbers
-            .into_iter()
-            .filter(|part_number| self.is_valid_gear_part_number(part_number))
-            .map(|part_number| part_number.value)
-            .collect()
-    }
+        let mut gear_ratios: Vec<u32> = Vec::new();
 
-    fn is_valid_gear_part_number(&self, part_number: &PartNumber) -> bool {
-        self.has_exactly_two_adjacent_gears(part_number)
-    }
+        for gear_position in gear_positions {
+            let adjacent_part_numbers = self.get_adjacent_part_numbers(gear_position);
 
-    fn has_exactly_two_adjacent_gears(&self, part_number: &PartNumber) -> bool {
-        let neighbour_positions = self.get_neighbour_positions(part_number);
-
-        let mut number_of_adjacent_gears = 0;
-
-        for (neighbour_row, neighbour_column) in neighbour_positions {
-            if let Part::Gear = self
-                .schematic
-                .get(neighbour_row)
-                .unwrap()
-                .get(neighbour_column)
-                .unwrap()
-            {
-                number_of_adjacent_gears += 1;
+            if adjacent_part_numbers.len() == 2 {
+                gear_ratios.push(
+                    adjacent_part_numbers.first().unwrap().value
+                        * adjacent_part_numbers.last().unwrap().value,
+                );
             }
         }
 
-        number_of_adjacent_gears == 2
+        gear_ratios
+    }
+
+    fn get_gear_positions(&self) -> Vec<(usize, usize)> {
+        let mut gear_positions = Vec::new();
+
+        for (row_index, row) in self.schematic.iter().enumerate() {
+            for (column_index, part) in row.iter().enumerate() {
+                if let Part::Symbol('*') = part {
+                    gear_positions.push((row_index, column_index));
+                }
+            }
+        }
+
+        gear_positions
     }
 }

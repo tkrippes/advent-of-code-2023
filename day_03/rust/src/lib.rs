@@ -44,9 +44,9 @@ fn get_sum_of_part_numbers(engine: Engine) -> u32 {
 }
 
 fn get_sum_of_gear_ratios(engine: Engine) -> u32 {
-    let gear_part_numbers = engine.get_gear_ratios();
+    let gear_ratios = engine.get_gear_ratios();
 
-    gear_part_numbers.iter().sum()
+    gear_ratios.iter().sum()
 }
 
 #[cfg(test)]
