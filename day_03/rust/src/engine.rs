@@ -73,6 +73,7 @@ impl Engine {
             }
         }
 
+        // TODO remove
         println!("Part numbers: {:?}", part_numbers);
 
         part_numbers
@@ -83,26 +84,30 @@ impl Engine {
         let mut part_number_value_digits = Vec::new();
 
         // TODO improve search for first column index
-        let mut first_column_index = column_index;
-        while let Some(Part::Digit(n)) = row.get(first_column_index) {
+        // get part number value digits from beginning to column index
+        let mut first_digit_column_index = column_index;
+        while let Some(Part::Digit(n)) = row.get(first_digit_column_index) {
             part_number_value_digits.push(n);
-            if first_column_index == 0 {
+            if first_digit_column_index == 0 {
                 break;
             }
-            first_column_index -= 1;
+            first_digit_column_index -= 1;
         }
+        // reverse in order to have right sorting of digits
         part_number_value_digits.reverse();
 
         // TODO improve search for last column index
-        let mut last_column_index = column_index + 1;
-        while let Some(Part::Digit(n)) = row.get(last_column_index) {
+        // get part number value digits from column index to end
+        let mut last_digit_column_index = column_index + 1;
+        while let Some(Part::Digit(n)) = row.get(last_digit_column_index) {
             part_number_value_digits.push(n);
-            if last_column_index == row.len() - 1 {
+            if last_digit_column_index == row.len() - 1 {
                 break;
             }
-            last_column_index += 1;
+            last_digit_column_index += 1;
         }
 
+        // calculate part number value from digits
         let mut part_number_value = 0;
         for (index, part_number_digit) in part_number_value_digits.into_iter().rev().enumerate() {
             part_number_value += part_number_digit * (u32::pow(10, index as u32));
@@ -111,7 +116,7 @@ impl Engine {
         PartNumber {
             value: part_number_value,
             row_index: row_index,
-            column_indices: (first_column_index..=last_column_index).collect(),
+            column_indices: (first_digit_column_index..=last_digit_column_index).collect(),
         }
     }
 
