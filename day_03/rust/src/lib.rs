@@ -22,7 +22,10 @@ pub fn part_2(file_name: &str) -> u32 {
 fn try_get_engine(file_name: &str) -> Option<Engine> {
     let file_content =
         fs::read_to_string(file_name).expect("input file should be located in input folder");
-    let file_lines: Vec<&str> = file_content.split('\n').collect();
+    let file_lines: Vec<&str> = file_content
+        .split('\n')
+        .map(|file_line| file_line.trim())
+        .collect();
 
     Engine::try_build(file_lines)
 }
