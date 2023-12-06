@@ -82,12 +82,14 @@ impl Engine {
     fn get_part_number(&self, row_index: usize, column_index: usize) -> PartNumber {
         let row = self.schematic.get(row_index).unwrap();
         let mut part_number_value_digits = Vec::new();
+        let mut value_digits_index = Vec::new();
 
         // TODO improve search for first column index
         // get part number value digits from beginning to column index
         let mut first_digit_column_index = column_index;
         while let Some(Part::Digit(n)) = row.get(first_digit_column_index) {
             part_number_value_digits.push(n);
+            value_digits_index.push(first_digit_column_index);
             if first_digit_column_index == 0 {
                 break;
             }
@@ -95,12 +97,14 @@ impl Engine {
         }
         // reverse in order to have right sorting of digits
         part_number_value_digits.reverse();
+        value_digits_index.reverse();
 
         // TODO improve search for last column index
         // get part number value digits from column index to end
         let mut last_digit_column_index = column_index + 1;
         while let Some(Part::Digit(n)) = row.get(last_digit_column_index) {
             part_number_value_digits.push(n);
+            value_digits_index.push(last_digit_column_index);
             if last_digit_column_index == row.len() - 1 {
                 break;
             }
@@ -116,7 +120,7 @@ impl Engine {
         PartNumber {
             value: part_number_value,
             row_index: row_index,
-            column_indices: (first_digit_column_index..=last_digit_column_index).collect(),
+            column_indices: value_digits_index,
         }
     }
 
