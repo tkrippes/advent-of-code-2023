@@ -111,6 +111,10 @@ impl Card {
         }
     }
 
+    pub fn get_id(&self) -> u32 {
+        self.id
+    }
+
     pub fn get_number_of_own_winning_numbers(&self) -> u32 {
         self.own_numbers
             .iter()

@@ -1,7 +1,7 @@
 mod card;
 
 use card::Card;
-use std::fs;
+use std::{collections::HashMap, fs};
 
 pub fn part_1(file_name: &str) -> u32 {
     let cards = try_get_cards(file_name);
@@ -10,7 +10,9 @@ pub fn part_1(file_name: &str) -> u32 {
 }
 
 pub fn part_2(file_name: &str) -> u32 {
-    todo!()
+    let cards = try_get_cards(file_name);
+
+    get_number_of_scratchcards(cards)
 }
 
 fn try_get_cards(file_name: &str) -> Vec<Card> {
@@ -45,6 +47,31 @@ fn get_points(cards: Vec<Card>) -> u32 {
     points
 }
 
+fn get_number_of_scratchcards(cards: Vec<Card>) -> u32 {
+    let max_card_id = cards.last().unwrap().get_id();
+    let mut number_of_scratchcards = HashMap::new();
+
+    for card in &cards {
+        number_of_scratchcards.insert(card.get_id(), 1);
+    }
+
+    for card in &cards {
+        let card_id = card.get_id();
+
+        for _ in 0..*number_of_scratchcards.get(&card_id).unwrap() {
+            for i in 0..card.get_number_of_own_winning_numbers() {
+                let new_card_id = card_id + i + 1;
+
+                if new_card_id <= max_card_id {
+                    *number_of_scratchcards.get_mut(&new_card_id).unwrap() += 1;
+                }
+            }
+        }
+    }
+
+    number_of_scratchcards.values().sum()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -58,6 +85,6 @@ mod tests {
     #[test]
     fn test_input_part_2() {
         let result = part_2("../input/test_input.txt");
-        assert_eq!(result, 0);
+        assert_eq!(result, 30);
     }
 }
