@@ -2,6 +2,7 @@ enum Part {
     Empty,
     Digit(u32),
     Symbol(char),
+    Gear,
 }
 
 impl TryFrom<char> for Part {
@@ -10,6 +11,7 @@ impl TryFrom<char> for Part {
         match value {
             '.' => Ok(Part::Empty),
             n @ '0'..='9' => Ok(Part::Digit(n.to_digit(10).unwrap())),
+            '*' => Ok(Part::Gear),
             c if c.is_ascii_punctuation() => Ok(Part::Symbol(c)),
             _ => Err(format!("Cannot parse Part from {}", value)),
         }
@@ -183,21 +185,22 @@ impl Engine {
     }
 
     fn is_valid_part_number(&self, part_number: &PartNumber) -> bool {
-        return self.has_adjacent_symbol(part_number);
+        self.has_adjacent_symbol(part_number)
     }
 
     fn has_adjacent_symbol(&self, part_number: &PartNumber) -> bool {
         let neighbour_positions = self.get_neighbour_positions(part_number);
 
         for (neighbour_row, neighbour_column) in neighbour_positions {
-            if let Part::Symbol(_) = self
+            match self
                 .schematic
                 .get(neighbour_row)
                 .unwrap()
                 .get(neighbour_column)
                 .unwrap()
             {
-                return true;
+                Part::Symbol(_) | Part::Gear => return true,
+                _ => continue,
             }
         }
 
@@ -287,5 +290,39 @@ impl Engine {
         }
 
         part_number_positions.contains(&position)
+    }
+
+    pub fn get_gear_ratios(&self) -> Vec<u32> {
+        let part_numbers = self.get_part_numbers();
+
+        part_numbers
+            .into_iter()
+            .filter(|part_number| self.is_valid_gear_part_number(part_number))
+            .map(|part_number| part_number.value)
+            .collect()
+    }
+
+    fn is_valid_gear_part_number(&self, part_number: &PartNumber) -> bool {
+        self.has_exactly_two_adjacent_gears(part_number)
+    }
+
+    fn has_exactly_two_adjacent_gears(&self, part_number: &PartNumber) -> bool {
+        let neighbour_positions = self.get_neighbour_positions(part_number);
+
+        let mut number_of_adjacent_gears = 0;
+
+        for (neighbour_row, neighbour_column) in neighbour_positions {
+            if let Part::Gear = self
+                .schematic
+                .get(neighbour_row)
+                .unwrap()
+                .get(neighbour_column)
+                .unwrap()
+            {
+                number_of_adjacent_gears += 1;
+            }
+        }
+
+        number_of_adjacent_gears == 2
     }
 }

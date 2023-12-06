@@ -16,7 +16,14 @@ pub fn part_1(file_name: &str) -> u32 {
 }
 
 pub fn part_2(file_name: &str) -> u32 {
-    todo!()
+    let engine = try_get_engine(file_name);
+
+    if let Some(engine) = engine {
+        get_sum_of_gear_ratios(engine)
+    } else {
+        println!("Failed to get engine");
+        0
+    }
 }
 
 fn try_get_engine(file_name: &str) -> Option<Engine> {
@@ -36,6 +43,12 @@ fn get_sum_of_part_numbers(engine: Engine) -> u32 {
     part_numbers.iter().sum()
 }
 
+fn get_sum_of_gear_ratios(engine: Engine) -> u32 {
+    let gear_part_numbers = engine.get_gear_ratios();
+
+    gear_part_numbers.iter().sum()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -49,6 +62,6 @@ mod tests {
     #[test]
     fn test_input_part_2() {
         let result = part_2("../input/test_input.txt");
-        assert_eq!(result, 0);
+        assert_eq!(result, 467835);
     }
 }
