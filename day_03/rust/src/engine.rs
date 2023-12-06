@@ -73,55 +73,116 @@ impl Engine {
             }
         }
 
-        // TODO remove
+        // TODO remove (remove also debug traits)
         println!("Part numbers: {:?}", part_numbers);
 
         part_numbers
     }
 
-    fn get_part_number(&self, row_index: usize, column_index: usize) -> PartNumber {
-        let row = self.schematic.get(row_index).unwrap();
-        let mut part_number_value_digits = Vec::new();
-        let mut value_digits_index = Vec::new();
+    fn get_part_number(&self, row_index: usize, start_column_index: usize) -> PartNumber {
+        let (part_number_value, part_number_value_digit_indices) =
+            self.get_part_number_value_and_digit_indices(row_index, start_column_index);
 
-        // TODO improve search for first column index
-        // get part number value digits from beginning to column index
-        let mut first_digit_column_index = column_index;
+        PartNumber {
+            value: part_number_value,
+            row_index: row_index,
+            column_indices: part_number_value_digit_indices,
+        }
+    }
+
+    fn get_part_number_value_and_digit_indices(
+        &self,
+        row_index: usize,
+        start_column_index: usize,
+    ) -> (u32, Vec<usize>) {
+        let (first_part_number_value_digits, first_part_number_value_digit_indices) =
+            self.get_first_part_number_digits_and_indices(row_index, start_column_index);
+        let (last_part_number_value_digits, last_part_number_value_digit_indices) =
+            self.get_last_part_number_digits_and_indices(row_index, start_column_index);
+
+        let part_number_value_digits = vec![
+            first_part_number_value_digits,
+            last_part_number_value_digits,
+        ]
+        .concat();
+        let part_number_value_digit_indices = vec![
+            first_part_number_value_digit_indices,
+            last_part_number_value_digit_indices,
+        ]
+        .concat();
+
+        let part_number_value = self.get_part_number_value(part_number_value_digits);
+
+        (part_number_value, part_number_value_digit_indices)
+    }
+
+    fn get_first_part_number_digits_and_indices(
+        &self,
+        row_index: usize,
+        start_column_index: usize,
+    ) -> (Vec<u32>, Vec<usize>) {
+        let row = self.schematic.get(row_index).unwrap();
+        let mut first_part_number_value_digits = Vec::new();
+        let mut first_part_number_value_digit_indices = Vec::new();
+
+        let mut first_digit_column_index = start_column_index;
         while let Some(Part::Digit(n)) = row.get(first_digit_column_index) {
-            part_number_value_digits.push(n);
-            value_digits_index.push(first_digit_column_index);
+            first_part_number_value_digits.push(*n);
+            first_part_number_value_digit_indices.push(first_digit_column_index);
+
             if first_digit_column_index == 0 {
                 break;
             }
+
             first_digit_column_index -= 1;
         }
-        // reverse in order to have right sorting of digits
-        part_number_value_digits.reverse();
-        value_digits_index.reverse();
 
-        // TODO improve search for last column index
-        // get part number value digits from column index to end
-        let mut last_digit_column_index = column_index + 1;
+        // reverse in order to have right sorting of digits
+        first_part_number_value_digits.reverse();
+        first_part_number_value_digit_indices.reverse();
+
+        (
+            first_part_number_value_digits,
+            first_part_number_value_digit_indices,
+        )
+    }
+
+    fn get_last_part_number_digits_and_indices(
+        &self,
+        row_index: usize,
+        start_column_index: usize,
+    ) -> (Vec<u32>, Vec<usize>) {
+        let row = self.schematic.get(row_index).unwrap();
+        let mut last_part_number_value_digits = Vec::new();
+        let mut last_part_number_value_digit_indices = Vec::new();
+
+        // TODO improve search
+        let mut last_digit_column_index = start_column_index + 1;
         while let Some(Part::Digit(n)) = row.get(last_digit_column_index) {
-            part_number_value_digits.push(n);
-            value_digits_index.push(last_digit_column_index);
+            last_part_number_value_digits.push(*n);
+            last_part_number_value_digit_indices.push(last_digit_column_index);
+
             if last_digit_column_index == row.len() - 1 {
                 break;
             }
+
             last_digit_column_index += 1;
         }
 
+        (
+            last_part_number_value_digits,
+            last_part_number_value_digit_indices,
+        )
+    }
+
+    fn get_part_number_value(&self, part_number_value_digits: Vec<u32>) -> u32 {
         // calculate part number value from digits
         let mut part_number_value = 0;
         for (index, part_number_digit) in part_number_value_digits.into_iter().rev().enumerate() {
             part_number_value += part_number_digit * (u32::pow(10, index as u32));
         }
 
-        PartNumber {
-            value: part_number_value,
-            row_index: row_index,
-            column_indices: value_digits_index,
-        }
+        part_number_value
     }
 
     fn is_valid_part_number(&self, part_number: &PartNumber) -> bool {
