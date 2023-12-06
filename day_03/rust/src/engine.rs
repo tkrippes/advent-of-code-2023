@@ -5,13 +5,13 @@ enum Part {
 }
 
 impl TryFrom<char> for Part {
-    type Error = &'static str;
+    type Error = String;
     fn try_from(value: char) -> Result<Self, Self::Error> {
         match value {
             '.' => Ok(Part::Empty),
             n @ '0'..='9' => Ok(Part::Digit(n.to_digit(10).unwrap())),
             c if c.is_ascii_punctuation() => Ok(Part::Symbol(c)),
-            _ => Err(stringify!("Cannot parse Part from {}", value)),
+            _ => Err(format!("Cannot parse Part from {}", value)),
         }
     }
 }
@@ -77,7 +77,40 @@ impl Engine {
     }
 
     fn get_part_number(&self, row_index: usize, column_index: usize) -> PartNumber {
-        todo!("Search for first and last index, get all digits, then create PartNumber from that information")
+        let row = self.schematic.get(row_index).unwrap();
+        let mut part_number_value_digits = Vec::new();
+
+        // TODO improve search for first column index
+        let mut first_column_index = column_index;
+        while let Some(Part::Digit(n)) = row.get(first_column_index) {
+            part_number_value_digits.push(n);
+            if first_column_index == 0 {
+                break;
+            }
+            first_column_index -= 1;
+        }
+        part_number_value_digits.reverse();
+
+        // TODO improve search for last column index
+        let mut last_column_index = column_index;
+        while let Some(Part::Digit(n)) = row.get(last_column_index + 1) {
+            part_number_value_digits.push(n);
+            if last_column_index == row.len() - 1 {
+                break;
+            }
+            last_column_index += 1;
+        }
+
+        let mut part_number_value = 0;
+        for (index, part_number_digit) in part_number_value_digits.into_iter().rev().enumerate() {
+            part_number_value += part_number_digit * (u32::pow(10, index as u32));
+        }
+
+        PartNumber {
+            value: part_number_value,
+            row_index: row_index,
+            column_indices: (first_column_index..=last_column_index).collect(),
+        }
     }
 
     fn is_valid_part_number(&self, part_number: &PartNumber) -> bool {
