@@ -208,6 +208,26 @@ impl Engine {
     }
 
     fn get_neighbour_positions(&self, part_number: &PartNumber) -> Vec<(usize, usize)> {
-        todo!()
+        let max_row_index = self.schematic.len() - 1;
+
+        let mut neighbour_positions = Vec::new();
+
+        for column_index in &part_number.column_indices {
+            let max_column_index = self.schematic.get(*column_index).unwrap().len();
+
+            match (part_number.row_index, *column_index) {
+                (0, 0) => todo!(),
+                (0, max_column_index) => todo!(),
+                (max_row_index, 0) => todo!(),
+                (max_row_index, max_column_index) => todo!(),
+                (0, m) => todo!(),
+                (max_row_index, m) => todo!(),
+                (n, 0) => todo!(),
+                (n, max_column_index) => todo!(),
+                (n, m) => todo!(),
+            }
+        }
+
+        neighbour_positions
     }
 }
