@@ -186,6 +186,28 @@ impl Engine {
     }
 
     fn is_valid_part_number(&self, part_number: &PartNumber) -> bool {
-        todo!("If any of the neighbours of any digit is a symbol, the part number is valid")
+        return self.has_adjacent_symbol(part_number);
+    }
+
+    fn has_adjacent_symbol(&self, part_number: &PartNumber) -> bool {
+        let neighbour_positions = self.get_neighbour_positions(part_number);
+
+        for (neighbour_row, neighbour_column) in neighbour_positions {
+            if let Part::Symbol(_) = self
+                .schematic
+                .get(neighbour_row)
+                .unwrap()
+                .get(neighbour_column)
+                .unwrap()
+            {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    fn get_neighbour_positions(&self, part_number: &PartNumber) -> Vec<(usize, usize)> {
+        todo!()
     }
 }
