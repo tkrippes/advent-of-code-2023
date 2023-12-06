@@ -16,8 +16,7 @@ impl TryFrom<char> for Part {
     }
 }
 
-// TODO remove debug trait
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq)]
 struct PartNumber {
     value: u32,
     row_index: usize,
@@ -184,9 +183,6 @@ impl Engine {
     }
 
     fn is_valid_part_number(&self, part_number: &PartNumber) -> bool {
-        // TODO remove
-        println!("Part Number: {:?}", part_number);
-
         return self.has_adjacent_symbol(part_number);
     }
 
@@ -194,12 +190,6 @@ impl Engine {
         let neighbour_positions = self.get_neighbour_positions(part_number);
 
         for (neighbour_row, neighbour_column) in neighbour_positions {
-            // TODO remove
-            println!(
-                "Neighbour row: {}, column: {}",
-                neighbour_row, neighbour_column
-            );
-
             if let Part::Symbol(_) = self
                 .schematic
                 .get(neighbour_row)
