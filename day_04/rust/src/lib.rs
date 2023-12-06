@@ -57,9 +57,10 @@ fn get_number_of_scratchcards(cards: Vec<Card>) -> u32 {
 
     for card in &cards {
         let card_id = card.get_id();
+        let number_of_own_winning_numbers = card.get_number_of_own_winning_numbers();
 
         for _ in 0..*number_of_scratchcards.get(&card_id).unwrap() {
-            for i in 0..card.get_number_of_own_winning_numbers() {
+            for i in 0..number_of_own_winning_numbers {
                 let new_card_id = card_id + i + 1;
 
                 if new_card_id <= max_card_id {
