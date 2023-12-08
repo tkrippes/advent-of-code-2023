@@ -23,17 +23,30 @@ impl Ranges {
                 })
             } else {
                 println!(
-                    "Cannot parse ranges, at least on of the input could not parse into a number in {}", input
+                    "Cannot parse ranges, at least on of the input could not parse into a number in '{}'", input
                 );
                 None
             }
         } else {
             println!(
-                "Cannot parse ranges, did not find 3 ranges inputs in {}",
+                "Cannot parse ranges, did not find 3 ranges inputs in '{}'",
                 input
             );
             None
         }
+    }
+
+    fn get_destination_from_source(&self, source: u64) -> Option<u64> {
+        if self.is_source_in_range(source) {
+            Some(source + self.destination_start_range - self.source_start_range)
+        } else {
+            None
+        }
+    }
+
+    fn is_source_in_range(&self, source: u64) -> bool {
+        let range = self.source_start_range..self.source_start_range + self.range_lengths;
+        range.contains(&source)
     }
 }
 
@@ -58,7 +71,13 @@ impl Map {
     }
 
     fn get_destination_from_source(&self, source: u64) -> u64 {
-        todo!()
+        for range in &self.ranges {
+            if let Some(destination) = range.get_destination_from_source(source) {
+                return destination;
+            }
+        }
+
+        source
     }
 }
 
