@@ -7,7 +7,7 @@ pub fn part_1(file_name: &str) -> u64 {
     let almanac = try_get_almanac(file_name);
 
     if let Some(almanac) = almanac {
-        get_lowest_location_of_initial_seeds(&almanac)
+        get_lowest_location_of_initial_seeds(&almanac, false)
     } else {
         println!("Failed to get almanac");
         0
@@ -15,7 +15,14 @@ pub fn part_1(file_name: &str) -> u64 {
 }
 
 pub fn part_2(file_name: &str) -> u64 {
-    todo!()
+    let almanac = try_get_almanac(file_name);
+
+    if let Some(almanac) = almanac {
+        get_lowest_location_of_initial_seeds(&almanac, true)
+    } else {
+        println!("Failed to get almanac");
+        0
+    }
 }
 
 fn try_get_almanac(file_name: &str) -> Option<Almanac> {
@@ -29,8 +36,8 @@ fn try_get_almanac(file_name: &str) -> Option<Almanac> {
     Almanac::try_build(file_lines)
 }
 
-fn get_lowest_location_of_initial_seeds(almanac: &Almanac) -> u64 {
-    let locations = almanac.get_locations_from_seeds();
+fn get_lowest_location_of_initial_seeds(almanac: &Almanac, consider_seed_range: bool) -> u64 {
+    let locations = almanac.get_locations_from_seeds(consider_seed_range);
 
     if let Some(minimum_location) = locations.iter().min() {
         *minimum_location

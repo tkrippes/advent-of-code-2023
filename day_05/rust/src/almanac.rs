@@ -251,13 +251,39 @@ impl Almanac {
         Some(seeds)
     }
 
-    pub fn get_locations_from_seeds(&self) -> Vec<u64> {
+    pub fn get_locations_from_seeds(&self, consider_seed_range: bool) -> Vec<u64> {
         let mut locations = Vec::new();
 
-        for seed in &self.seeds {
-            locations.push(self.maps.get_location_from_seed(*seed));
+        if let Some(seeds) = self.get_seeds(consider_seed_range) {
+            for seed in seeds {
+                locations.push(self.maps.get_location_from_seed(seed));
+            }
+        } else {
+            println!("Cannot get locations from seeds");
         }
 
         locations
+    }
+
+    fn get_seeds(&self, consider_seed_range: bool) -> Option<Vec<u64>> {
+        if consider_seed_range {
+            if self.seeds.len() % 2 == 0 {
+                let mut seeds = Vec::new();
+
+                for i in (0..self.seeds.len()).step_by(2) {
+                    let start_seed = *self.seeds.get(i).unwrap();
+                    let length = *self.seeds.get(i + 1).unwrap();
+
+                    seeds.extend::<Vec<u64>>((start_seed..start_seed + length).collect())
+                }
+
+                Some(seeds)
+            } else {
+                println!("Could not get seed range, number of seed input is odd");
+                None
+            }
+        } else {
+            Some(self.seeds.clone())
+        }
     }
 }
