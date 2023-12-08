@@ -274,7 +274,12 @@ impl Almanac {
                     let start_seed = *self.seeds.get(i).unwrap();
                     let length = *self.seeds.get(i + 1).unwrap();
 
-                    seeds.extend::<Vec<u64>>((start_seed..start_seed + length).collect())
+                    for j in 0..length {
+                        let seed = start_seed + j;
+                        if !seeds.contains(&seed) {
+                            seeds.push(seed);
+                        }
+                    }
                 }
 
                 Some(seeds)
