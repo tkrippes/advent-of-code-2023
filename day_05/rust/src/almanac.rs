@@ -86,12 +86,30 @@ impl Almanac {
         if let (Some(seeds), Some(maps)) = (seeds, maps) {
             Some(Almanac { seeds, maps })
         } else {
+            println!("Cannot parse almanac");
             None
         }
     }
 
     fn try_build_seeds(input: &str) -> Option<Vec<u64>> {
-        todo!()
+        let mut seeds = Vec::new();
+
+        if let Some(seeds_input) = input.split(':').last() {
+            for seed in seeds_input.split_whitespace() {
+                match seed.parse::<u64>() {
+                    Ok(seed) => seeds.push(seed),
+                    Err(seed_parsing_error) => {
+                        println!("Cannot parse seeds, {}", seed_parsing_error);
+                        return None;
+                    }
+                }
+            }
+        } else {
+            println!("Cannot find seeds input");
+            return None;
+        }
+
+        Some(seeds)
     }
 
     pub fn get_locations_from_seeds(&self) -> Vec<u64> {
