@@ -212,6 +212,7 @@ pub struct Almanac {
     maps: Maps,
 }
 
+// TODO improve performance for part 2
 impl Almanac {
     pub fn try_build(input: Vec<&str>) -> Option<Self> {
         let mut seeds: Option<Vec<u64>> = None;
