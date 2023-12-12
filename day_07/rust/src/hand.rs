@@ -113,11 +113,10 @@ impl Hand {
     }
 
     fn get_type(&self) -> HandType {
-        let sorted_card_count = self.get_sorted_card_count();
-
         if self.consider_jokers {
             todo!()
         } else {
+            let sorted_card_count = self.get_sorted_card_count();
             match sorted_card_count.first() {
                 Some(5) => HandType::FiveOfAKind,
                 Some(4) => HandType::FourOfAKind,
