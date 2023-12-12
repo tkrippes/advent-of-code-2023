@@ -44,12 +44,9 @@ impl TrackRecords {
                 Self::try_get_record_times(record_times_input),
                 Self::try_get_record_distances(record_distances_input),
             ) {
-                if let Some(track_records) =
-                    Self::try_get_track_records(record_times, record_distances)
-                {
-                    Some(TrackRecords { track_records })
-                } else {
-                    None
+                match Self::try_get_track_records(record_times, record_distances) {
+                    Some(track_records) => Some(TrackRecords { track_records }),
+                    None => None,
                 }
             } else {
                 println!(
@@ -71,14 +68,17 @@ impl TrackRecords {
 
         if record_times.len() == record_distances.len() {
             for (index, record_time) in record_times.iter().enumerate() {
-                if let Some(record_distance) = record_distances.get(index) {
-                    track_records.push(TrackRecord::build(*record_time, *record_distance));
-                } else {
-                    println!(
-                        "Cannot parse track records, cannot find record distance for {}",
-                        index
-                    );
-                    return None;
+                match record_distances.get(index) {
+                    Some(record_distance) => {
+                        track_records.push(TrackRecord::build(*record_time, *record_distance))
+                    }
+                    None => {
+                        println!(
+                            "Cannot parse track records, cannot find record distance for {}",
+                            index
+                        );
+                        return None;
+                    }
                 }
             }
 
@@ -91,11 +91,12 @@ impl TrackRecords {
 
     fn try_get_record_times(record_times_input: &str) -> Option<Vec<u64>> {
         if let Some(record_times_input) = record_times_input.split(':').last() {
-            if let Some(record_times) = Self::try_get_numbers(record_times_input) {
-                Some(record_times)
-            } else {
-                println!("Cannot get record times");
-                None
+            match Self::try_get_numbers(record_times_input) {
+                Some(record_times) => Some(record_times),
+                None => {
+                    println!("Cannot get record times");
+                    None
+                }
             }
         } else {
             println!(
@@ -107,19 +108,21 @@ impl TrackRecords {
     }
 
     fn try_get_record_distances(record_distances_input: &str) -> Option<Vec<u64>> {
-        if let Some(record_distances_input) = record_distances_input.split(':').last() {
-            if let Some(record_distances) = Self::try_get_numbers(record_distances_input) {
-                Some(record_distances)
-            } else {
-                println!("Cannot get record distances");
+        match record_distances_input.split(':').last() {
+            Some(record_distances_input) => match Self::try_get_numbers(record_distances_input) {
+                Some(record_distances) => Some(record_distances),
+                None => {
+                    println!("Cannot get record distances");
+                    None
+                }
+            },
+            None => {
+                println!(
+                    "Cannot get record distances, could not find record distances input in {}",
+                    record_distances_input
+                );
                 None
             }
-        } else {
-            println!(
-                "Cannot get record distances, could not find record distances input in {}",
-                record_distances_input
-            );
-            None
         }
     }
 
@@ -153,11 +156,14 @@ impl TrackRecords {
     }
 
     pub fn get_number_of_ways_to_beat_single_track_record(&self, acceleration_rate: u64) -> u64 {
-        if let Some(single_track_record) = self.try_get_single_track_record() {
-            single_track_record.get_number_of_ways_to_beat_track_record(acceleration_rate)
-        } else {
-            println!("Cannot get number of ways to beat single track record");
-            0
+        match self.try_get_single_track_record() {
+            Some(single_track_record) => {
+                single_track_record.get_number_of_ways_to_beat_track_record(acceleration_rate)
+            }
+            None => {
+                println!("Cannot get number of ways to beat single track record");
+                0
+            }
         }
     }
 
