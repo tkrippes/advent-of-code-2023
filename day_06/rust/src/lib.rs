@@ -4,7 +4,7 @@ use track_record::TrackRecords;
 mod boat;
 mod track_record;
 
-pub fn part_1(file_name: &str) -> u32 {
+pub fn part_1(file_name: &str) -> u64 {
     let track_records = try_get_track_records(file_name);
 
     if let Some(track_records) = track_records {
@@ -15,8 +15,15 @@ pub fn part_1(file_name: &str) -> u32 {
     }
 }
 
-pub fn part_2(file_name: &str) -> u32 {
-    todo!()
+pub fn part_2(file_name: &str) -> u64 {
+    let track_records = try_get_track_records(file_name);
+
+    if let Some(track_records) = track_records {
+        get_number_of_ways_to_beat_single_track_record(track_records, 1)
+    } else {
+        println!("Failed to get track records");
+        0
+    }
 }
 
 fn try_get_track_records(file_name: &str) -> Option<TrackRecords> {
@@ -32,12 +39,19 @@ fn try_get_track_records(file_name: &str) -> Option<TrackRecords> {
 
 fn get_product_of_number_of_ways_to_beat_track_records(
     track_records: TrackRecords,
-    acceleration_rate: u32,
-) -> u32 {
+    acceleration_rate: u64,
+) -> u64 {
     let number_of_ways_to_beat_track_records =
         track_records.get_number_of_ways_to_beat_track_records(acceleration_rate);
 
     number_of_ways_to_beat_track_records.iter().product()
+}
+
+fn get_number_of_ways_to_beat_single_track_record(
+    track_records: TrackRecords,
+    acceleration_rate: u64,
+) -> u64 {
+    track_records.get_number_of_ways_to_beat_single_track_record(acceleration_rate)
 }
 
 #[cfg(test)]
