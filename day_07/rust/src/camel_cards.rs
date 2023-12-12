@@ -79,14 +79,21 @@ impl CamelCards {
     pub fn get_ranked_bids(&self) -> Vec<u64> {
         let mut ranked_bids = Vec::new();
 
-        let mut hand_bids = self.hand_bids.clone();
-        hand_bids.sort();
-        hand_bids.reverse();
+        let descending_hand_bids = self.get_descending_hand_bids();
 
-        for hand_bid in &hand_bids {
+        for hand_bid in &descending_hand_bids {
             ranked_bids.push(hand_bid.bid);
         }
 
         ranked_bids
+    }
+
+    fn get_descending_hand_bids(&self) -> Vec<HandBid> {
+        let mut hand_bids = self.hand_bids.clone();
+
+        hand_bids.sort();
+        hand_bids.reverse();
+
+        hand_bids
     }
 }

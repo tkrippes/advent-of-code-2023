@@ -105,7 +105,7 @@ impl Hand {
             })
         } else {
             println!(
-                "Cannot parse hand, had {} instead of 5 cards",
+                "Cannot parse hand, got {} instead of 5 cards",
                 characters.len()
             );
             None
@@ -113,16 +113,16 @@ impl Hand {
     }
 
     fn get_type(&self) -> HandType {
-        let sorted_card_count = self.get_sorted_card_count();
+        let descending_card_counts = self.get_descending_card_counts();
 
-        match sorted_card_count.first() {
+        match descending_card_counts.first() {
             Some(5) => HandType::FiveOfAKind,
             Some(4) => HandType::FourOfAKind,
-            Some(3) => match sorted_card_count.get(1) {
+            Some(3) => match descending_card_counts.get(1) {
                 Some(2) => HandType::FullHouse,
                 _ => HandType::ThreeOfAKind,
             },
-            Some(2) => match sorted_card_count.get(1) {
+            Some(2) => match descending_card_counts.get(1) {
                 Some(2) => HandType::TwoPair,
                 _ => HandType::OnePair,
             },
@@ -130,35 +130,59 @@ impl Hand {
         }
     }
 
-    fn get_sorted_card_count(&self) -> Vec<u64> {
-        let mut card_count = HashMap::new();
+    fn get_descending_card_counts(&self) -> Vec<u64> {
+        let mut card_counts_map = self.get_card_counts_map();
+
+        let number_of_jokers = self.get_and_remove_number_of_jokers(&mut card_counts_map);
+
+        let mut descending_card_counts = Self::get_descending_map_values(card_counts_map);
+
+        self.add_number_of_jokers_to_highest_card_count(
+            &mut descending_card_counts,
+            number_of_jokers,
+        );
+
+        descending_card_counts
+    }
+
+    fn get_card_counts_map(&self) -> HashMap<char, u64> {
+        let mut card_count_map = HashMap::new();
 
         for card in self.cards {
-            *card_count.entry(card.get_char()).or_insert(0u64) += 1;
+            *card_count_map.entry(card.get_char()).or_insert(0u64) += 1;
         }
 
-        let number_of_jokers = match card_count.get(&'J') {
-            Some(number_of_jokers) if self.consider_jokers => *number_of_jokers,
-            _ => 0,
-        };
+        card_count_map
+    }
 
+    fn get_and_remove_number_of_jokers(&self, card_counts_map: &mut HashMap<char, u64>) -> u64 {
         if self.consider_jokers {
-            card_count.remove(&'J');
+            card_counts_map.remove(&'J').unwrap_or_default()
+        } else {
+            0
         }
+    }
 
-        let mut card_count = card_count.values().copied().collect::<Vec<u64>>();
+    fn get_descending_map_values(map: HashMap<char, u64>) -> Vec<u64> {
+        let mut map_values = map.values().copied().collect::<Vec<u64>>();
 
-        card_count.sort();
-        card_count.reverse();
+        map_values.sort();
+        map_values.reverse();
 
+        map_values
+    }
+
+    fn add_number_of_jokers_to_highest_card_count(
+        &self,
+        descending_card_counts: &mut Vec<u64>,
+        number_of_jokers: u64,
+    ) {
         if self.consider_jokers {
-            match card_count.first_mut() {
-                Some(highest_count) => *highest_count += number_of_jokers,
-                None => card_count.push(number_of_jokers),
+            match descending_card_counts.first_mut() {
+                Some(highest_card_count) => *highest_card_count += number_of_jokers,
+                None => descending_card_counts.push(number_of_jokers),
             };
         }
-
-        card_count
     }
 }
 
