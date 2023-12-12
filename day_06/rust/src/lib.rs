@@ -53,6 +53,6 @@ mod tests {
     #[test]
     fn test_input_part_2() {
         let result = part_2("../input/test_input.txt");
-        assert_eq!(result, 0);
+        assert_eq!(result, 71503);
     }
 }
