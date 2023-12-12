@@ -7,22 +7,26 @@ mod track_record;
 pub fn part_1(file_name: &str) -> u64 {
     let track_records = try_get_track_records(file_name);
 
-    if let Some(track_records) = track_records {
-        get_product_of_number_of_ways_to_beat_track_records(track_records, 1)
-    } else {
-        println!("Failed to get track records");
-        0
+    match track_records {
+        Some(track_records) => {
+            get_product_of_number_of_ways_to_beat_track_records(track_records, 1)
+        }
+        None => {
+            println!("Failed to get track records");
+            0
+        }
     }
 }
 
 pub fn part_2(file_name: &str) -> u64 {
     let track_records = try_get_track_records(file_name);
 
-    if let Some(track_records) = track_records {
-        get_number_of_ways_to_beat_single_track_record(track_records, 1)
-    } else {
-        println!("Failed to get track records");
-        0
+    match track_records {
+        Some(track_records) => get_number_of_ways_to_beat_single_track_record(track_records, 1),
+        None => {
+            println!("Failed to get track records");
+            0
+        }
     }
 }
 
