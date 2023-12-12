@@ -73,7 +73,7 @@ impl Card {
 
 const NUMBER_OF_CARDS: usize = 5;
 
-#[derive(PartialEq, Eq, Ord)]
+#[derive(Clone, PartialEq, Eq, Ord)]
 pub struct Hand {
     cards: [Card; NUMBER_OF_CARDS],
 }

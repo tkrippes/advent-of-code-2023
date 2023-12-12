@@ -1,6 +1,6 @@
 use super::hand::Hand;
 
-#[derive(PartialEq, Eq, Ord)]
+#[derive(Clone, PartialEq, Eq, Ord)]
 struct HandBid {
     hand: Hand,
     bid: u64,
@@ -62,13 +62,14 @@ impl CamelCards {
         }
     }
 
-    pub fn get_ranked_bids(&mut self) -> Vec<u64> {
+    pub fn get_ranked_bids(&self) -> Vec<u64> {
         let mut ranked_bids = Vec::new();
 
-        self.hand_bids.sort();
-        self.hand_bids.reverse();
+        let mut hand_bids = self.hand_bids.clone();
+        hand_bids.sort();
+        hand_bids.reverse();
 
-        for hand_bid in &self.hand_bids {
+        for hand_bid in &hand_bids {
             ranked_bids.push(hand_bid.bid);
         }
 
