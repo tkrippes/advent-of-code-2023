@@ -1,7 +1,6 @@
-use crate::hand;
-
 use super::hand::Hand;
 
+#[derive(PartialEq, Eq, Ord)]
 struct HandBid {
     hand: Hand,
     bid: u64,
@@ -10,6 +9,12 @@ struct HandBid {
 impl HandBid {
     fn build(hand: Hand, bid: u64) -> Self {
         HandBid { hand, bid }
+    }
+}
+
+impl PartialOrd for HandBid {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.hand.partial_cmp(&other.hand)
     }
 }
 
@@ -55,5 +60,18 @@ impl CamelCards {
                 None
             }
         }
+    }
+
+    pub fn get_ranked_bids(&mut self) -> Vec<u64> {
+        let mut ranked_bids = Vec::new();
+
+        self.hand_bids.sort();
+        self.hand_bids.reverse();
+
+        for hand_bid in &self.hand_bids {
+            ranked_bids.push(hand_bid.bid);
+        }
+
+        ranked_bids
     }
 }
