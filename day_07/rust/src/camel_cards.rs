@@ -23,7 +23,7 @@ pub struct CamelCards {
 }
 
 impl CamelCards {
-    pub fn try_build(inputs: Vec<&str>) -> Option<Self> {
+    pub fn try_build(inputs: Vec<&str>, consider_jokers: bool) -> Option<Self> {
         let mut hand_bids = Vec::new();
 
         for input in inputs {
@@ -32,9 +32,10 @@ impl CamelCards {
             if let (Some(hand_input), Some(bid_input)) =
                 (camel_cards_input.first(), camel_cards_input.last())
             {
-                if let (Some(hand), Some(bid)) =
-                    (Hand::try_build(hand_input), Self::try_build_bid(bid_input))
-                {
+                if let (Some(hand), Some(bid)) = (
+                    Hand::try_build(hand_input, consider_jokers),
+                    Self::try_build_bid(bid_input),
+                ) {
                     hand_bids.push(HandBid::build(hand, bid));
                 } else {
                     println!("Cannot parse camel cards");

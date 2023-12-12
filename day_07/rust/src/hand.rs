@@ -27,15 +27,16 @@ enum Card {
     Four,
     Three,
     Two,
+    Joker,
 }
 
 impl Card {
-    fn try_build(character: char) -> Option<Self> {
+    fn try_build(character: char, consider_jokers: bool) -> Option<Self> {
         match character {
             'A' => Some(Card::Ace),
             'K' => Some(Card::King),
             'Q' => Some(Card::Queen),
-            'J' => Some(Card::Jack),
+            'J' if !consider_jokers => Some(Card::Jack),
             'T' => Some(Card::Ten),
             '9' => Some(Card::Nine),
             '8' => Some(Card::Eight),
@@ -45,6 +46,7 @@ impl Card {
             '4' => Some(Card::Four),
             '3' => Some(Card::Three),
             '2' => Some(Card::Two),
+            'J' if consider_jokers => Some(Card::Joker),
             _ => {
                 println!("Cannot parse character from {}", character);
                 None
@@ -67,6 +69,7 @@ impl Card {
             Card::Four => '4',
             Card::Three => '3',
             Card::Two => '2',
+            Card::Joker => 'J',
         }
     }
 }
@@ -76,17 +79,18 @@ const NUMBER_OF_CARDS: usize = 5;
 #[derive(Clone, PartialEq, Eq, Ord)]
 pub struct Hand {
     cards: [Card; NUMBER_OF_CARDS],
+    consider_jokers: bool,
 }
 
 impl Hand {
-    pub fn try_build(characters_input: &str) -> Option<Self> {
+    pub fn try_build(characters_input: &str, consider_jokers: bool) -> Option<Self> {
         let characters = characters_input.trim();
 
         if characters.len() == NUMBER_OF_CARDS {
             let mut cards: [Card; NUMBER_OF_CARDS] = [Card::Two; NUMBER_OF_CARDS];
 
             for (index, character) in characters.chars().enumerate() {
-                match Card::try_build(character) {
+                match Card::try_build(character, consider_jokers) {
                     Some(card) => cards[index] = card,
                     None => {
                         println!("Cannot parse hand");
@@ -95,7 +99,10 @@ impl Hand {
                 }
             }
 
-            Some(Hand { cards })
+            Some(Hand {
+                cards,
+                consider_jokers,
+            })
         } else {
             println!(
                 "Cannot parse hand, had {} instead of 5 cards",
@@ -108,18 +115,22 @@ impl Hand {
     fn get_type(&self) -> HandType {
         let sorted_card_count = self.get_sorted_card_count();
 
-        match sorted_card_count.first() {
-            Some(5) => HandType::FiveOfAKind,
-            Some(4) => HandType::FourOfAKind,
-            Some(3) => match sorted_card_count.get(1) {
-                Some(2) => HandType::FullHouse,
-                _ => HandType::ThreeOfAKind,
-            },
-            Some(2) => match sorted_card_count.get(1) {
-                Some(2) => HandType::TwoPair,
-                _ => HandType::OnePair,
-            },
-            _ => HandType::HighCard,
+        if self.consider_jokers {
+            todo!()
+        } else {
+            match sorted_card_count.first() {
+                Some(5) => HandType::FiveOfAKind,
+                Some(4) => HandType::FourOfAKind,
+                Some(3) => match sorted_card_count.get(1) {
+                    Some(2) => HandType::FullHouse,
+                    _ => HandType::ThreeOfAKind,
+                },
+                Some(2) => match sorted_card_count.get(1) {
+                    Some(2) => HandType::TwoPair,
+                    _ => HandType::OnePair,
+                },
+                _ => HandType::HighCard,
+            }
         }
     }
 
