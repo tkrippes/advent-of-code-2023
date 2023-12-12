@@ -76,7 +76,7 @@ impl Card {
 
 const NUMBER_OF_CARDS: usize = 5;
 
-#[derive(Clone, PartialEq, Eq, Ord)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Hand {
     cards: [Card; NUMBER_OF_CARDS],
     consider_jokers: bool,
@@ -146,11 +146,7 @@ impl Hand {
             card_count.remove(&'J');
         }
 
-        let mut card_count = card_count
-            .values()
-            .into_iter()
-            .map(|value| *value)
-            .collect::<Vec<u64>>();
+        let mut card_count = card_count.values().copied().collect::<Vec<u64>>();
 
         card_count.sort();
         card_count.reverse();
@@ -166,16 +162,22 @@ impl Hand {
     }
 }
 
+impl Ord for Hand {
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
+        match self.get_type().cmp(&other.get_type()) {
+            cmp::Ordering::Less => cmp::Ordering::Less,
+            cmp::Ordering::Equal => match self.cards.cmp(&other.cards) {
+                cmp::Ordering::Less => cmp::Ordering::Less,
+                cmp::Ordering::Equal => cmp::Ordering::Equal,
+                cmp::Ordering::Greater => cmp::Ordering::Greater,
+            },
+            cmp::Ordering::Greater => cmp::Ordering::Greater,
+        }
+    }
+}
+
 impl PartialOrd for Hand {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-        match self.get_type().cmp(&other.get_type()) {
-            cmp::Ordering::Less => Some(cmp::Ordering::Less),
-            cmp::Ordering::Equal => match self.cards.cmp(&other.cards) {
-                cmp::Ordering::Less => Some(cmp::Ordering::Less),
-                cmp::Ordering::Equal => Some(cmp::Ordering::Equal),
-                cmp::Ordering::Greater => Some(cmp::Ordering::Greater),
-            },
-            cmp::Ordering::Greater => Some(cmp::Ordering::Greater),
-        }
+        Some(self.cmp(other))
     }
 }

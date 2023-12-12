@@ -1,6 +1,7 @@
 use super::hand::Hand;
+use std::cmp;
 
-#[derive(Clone, PartialEq, Eq, Ord)]
+#[derive(Clone, Eq)]
 struct HandBid {
     hand: Hand,
     bid: u64,
@@ -12,9 +13,21 @@ impl HandBid {
     }
 }
 
+impl PartialEq for HandBid {
+    fn eq(&self, other: &Self) -> bool {
+        self.hand.eq(&other.hand)
+    }
+}
+
+impl Ord for HandBid {
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
+        self.hand.cmp(&other.hand)
+    }
+}
+
 impl PartialOrd for HandBid {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.hand.partial_cmp(&other.hand)
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 
