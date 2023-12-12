@@ -113,23 +113,20 @@ impl Hand {
     }
 
     fn get_type(&self) -> HandType {
-        if self.consider_jokers {
-            todo!()
-        } else {
-            let sorted_card_count = self.get_sorted_card_count();
-            match sorted_card_count.first() {
-                Some(5) => HandType::FiveOfAKind,
-                Some(4) => HandType::FourOfAKind,
-                Some(3) => match sorted_card_count.get(1) {
-                    Some(2) => HandType::FullHouse,
-                    _ => HandType::ThreeOfAKind,
-                },
-                Some(2) => match sorted_card_count.get(1) {
-                    Some(2) => HandType::TwoPair,
-                    _ => HandType::OnePair,
-                },
-                _ => HandType::HighCard,
-            }
+        let sorted_card_count = self.get_sorted_card_count();
+
+        match sorted_card_count.first() {
+            Some(5) => HandType::FiveOfAKind,
+            Some(4) => HandType::FourOfAKind,
+            Some(3) => match sorted_card_count.get(1) {
+                Some(2) => HandType::FullHouse,
+                _ => HandType::ThreeOfAKind,
+            },
+            Some(2) => match sorted_card_count.get(1) {
+                Some(2) => HandType::TwoPair,
+                _ => HandType::OnePair,
+            },
+            _ => HandType::HighCard,
         }
     }
 
@@ -140,6 +137,15 @@ impl Hand {
             *card_count.entry(card.get_char()).or_insert(0u64) += 1;
         }
 
+        let number_of_jokers = match card_count.get(&'J') {
+            Some(number_of_jokers) if self.consider_jokers => *number_of_jokers,
+            _ => 0,
+        };
+
+        if self.consider_jokers {
+            card_count.remove(&'J');
+        }
+
         let mut card_count = card_count
             .values()
             .into_iter()
@@ -148,6 +154,13 @@ impl Hand {
 
         card_count.sort();
         card_count.reverse();
+
+        if self.consider_jokers {
+            match card_count.first_mut() {
+                Some(highest_count) => *highest_count += number_of_jokers,
+                None => card_count.push(number_of_jokers),
+            };
+        }
 
         card_count
     }
