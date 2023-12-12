@@ -37,31 +37,18 @@ pub struct TrackRecords {
 
 impl TrackRecords {
     pub fn try_build(input: Vec<&str>) -> Option<Self> {
-        let mut track_records = Vec::new();
-
         if let (Some(record_times_input), Some(record_distances_input)) =
             (input.first(), input.last())
         {
             if let (Some(record_times), Some(record_distances)) = (
-                Self::get_record_times(record_times_input),
-                Self::get_record_distances(record_distances_input),
+                Self::try_get_record_times(record_times_input),
+                Self::try_get_record_distances(record_distances_input),
             ) {
-                if record_times.len() == record_distances.len() {
-                    for (index, record_time) in record_times.iter().enumerate() {
-                        if let Some(record_distance) = record_distances.get(index) {
-                            track_records.push(TrackRecord::build(*record_time, *record_distance));
-                        } else {
-                            println!(
-                                "Cannot parse track records, cannot find record distance for {}",
-                                index
-                            );
-                            return None;
-                        }
-                    }
-
+                if let Some(track_records) =
+                    Self::try_get_track_records(record_times, record_distances)
+                {
                     Some(TrackRecords { track_records })
                 } else {
-                    println!("Cannot parse track records, times and distances do not have the same length");
                     None
                 }
             } else {
@@ -76,26 +63,40 @@ impl TrackRecords {
         }
     }
 
-    fn get_record_times(record_times_input: &str) -> Option<Vec<u64>> {
-        let mut record_times = Vec::new();
+    fn try_get_track_records(
+        record_times: Vec<u64>,
+        record_distances: Vec<u64>,
+    ) -> Option<Vec<TrackRecord>> {
+        let mut track_records = Vec::new();
 
-        if let Some(record_times_input) = record_times_input.split(':').last() {
-            let record_times_input = record_times_input.split_whitespace().collect::<Vec<&str>>();
-
-            for record_time in record_times_input {
-                match record_time.parse::<u64>() {
-                    Ok(record_time) => record_times.push(record_time),
-                    Err(record_time_parsing_error) => {
-                        println!(
-                            "Cannot get record times, cannot parse record time, {}",
-                            record_time_parsing_error
-                        );
-                        return None;
-                    }
+        if record_times.len() == record_distances.len() {
+            for (index, record_time) in record_times.iter().enumerate() {
+                if let Some(record_distance) = record_distances.get(index) {
+                    track_records.push(TrackRecord::build(*record_time, *record_distance));
+                } else {
+                    println!(
+                        "Cannot parse track records, cannot find record distance for {}",
+                        index
+                    );
+                    return None;
                 }
             }
 
-            Some(record_times)
+            Some(track_records)
+        } else {
+            println!("Cannot parse track records, times and distances do not have the same length");
+            None
+        }
+    }
+
+    fn try_get_record_times(record_times_input: &str) -> Option<Vec<u64>> {
+        if let Some(record_times_input) = record_times_input.split(':').last() {
+            if let Some(record_times) = Self::try_get_numbers(record_times_input) {
+                Some(record_times)
+            } else {
+                println!("Cannot get record times");
+                None
+            }
         } else {
             println!(
                 "Cannot get record times, could not find record times input in {}",
@@ -105,28 +106,14 @@ impl TrackRecords {
         }
     }
 
-    fn get_record_distances(record_distances_input: &str) -> Option<Vec<u64>> {
-        let mut record_distances = Vec::new();
-
+    fn try_get_record_distances(record_distances_input: &str) -> Option<Vec<u64>> {
         if let Some(record_distances_input) = record_distances_input.split(':').last() {
-            let record_distances_input = record_distances_input
-                .split_whitespace()
-                .collect::<Vec<&str>>();
-
-            for record_distance in record_distances_input {
-                match record_distance.parse::<u64>() {
-                    Ok(record_distance) => record_distances.push(record_distance),
-                    Err(record_distance_parsing_error) => {
-                        println!(
-                            "Cannot get record distance, cannot parse record distance, {}",
-                            record_distance_parsing_error
-                        );
-                        return None;
-                    }
-                }
+            if let Some(record_distances) = Self::try_get_numbers(record_distances_input) {
+                Some(record_distances)
+            } else {
+                println!("Cannot get record distances");
+                None
             }
-
-            Some(record_distances)
         } else {
             println!(
                 "Cannot get record distances, could not find record distances input in {}",
@@ -134,6 +121,24 @@ impl TrackRecords {
             );
             None
         }
+    }
+
+    fn try_get_numbers(numbers_input: &str) -> Option<Vec<u64>> {
+        let mut numbers = Vec::new();
+
+        let numbers_input = numbers_input.split_whitespace().collect::<Vec<&str>>();
+
+        for number in numbers_input {
+            match number.parse::<u64>() {
+                Ok(number) => numbers.push(number),
+                Err(number_parsing_error) => {
+                    println!("Cannot parse number, {}", number_parsing_error);
+                    return None;
+                }
+            }
+        }
+
+        Some(numbers)
     }
 
     pub fn get_number_of_ways_to_beat_track_records(&self, acceleration_rate: u64) -> Vec<u64> {
@@ -165,25 +170,9 @@ impl TrackRecords {
             record_distances.push(track_record.distance_in_mm);
         }
 
-        let single_record_time = record_times
-            .iter()
-            .map(|record_time| record_time.to_string())
-            .fold(String::new(), |mut sum, record_time| {
-                sum.push_str(&record_time);
-                sum
-            });
-
-        let single_record_distance = record_distances
-            .iter()
-            .map(|record_distance| record_distance.to_string())
-            .fold(String::new(), |mut sum, record_distance| {
-                sum.push_str(&record_distance);
-                sum
-            });
-
-        if let (Ok(single_record_time), Ok(single_record_distance)) = (
-            single_record_time.parse::<u64>(),
-            single_record_distance.parse::<u64>(),
+        if let (Some(single_record_time), Some(single_record_distance)) = (
+            Self::try_get_single_number(record_times),
+            Self::try_get_single_number(record_distances),
         ) {
             Some(TrackRecord {
                 time_in_ms: single_record_time,
@@ -192,6 +181,24 @@ impl TrackRecords {
         } else {
             println!("Cannot get single track record, either record time or distance could not be parsed");
             None
+        }
+    }
+
+    fn try_get_single_number(numbers: Vec<u64>) -> Option<u64> {
+        let single_number = numbers.iter().map(|number| number.to_string()).fold(
+            String::new(),
+            |mut sum, number| {
+                sum.push_str(&number);
+                sum
+            },
+        );
+
+        match single_number.parse::<u64>() {
+            Ok(single_number) => Some(single_number),
+            Err(single_number_parsing_error) => {
+                println!("Cannot get single number, {}", single_number_parsing_error);
+                None
+            }
         }
     }
 }
