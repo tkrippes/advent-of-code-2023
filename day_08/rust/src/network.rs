@@ -1,6 +1,8 @@
 use regex;
 use std::collections::HashMap;
 
+use super::command;
+
 type Node = String;
 
 struct NodeConnections {
@@ -84,6 +86,54 @@ impl Network {
                 println!("Cannot get connection, no connection found in {}", input);
                 None
             }
+        }
+    }
+
+    pub fn get_number_of_steps(
+        &self,
+        commands: &command::Commands,
+        start_node: &str,
+        end_node: &str,
+    ) -> Option<u32> {
+        if self.connections.contains_key(start_node) && self.connections.contains_key(end_node) {
+            let commands = commands.get_commands();
+            let mut current_node = start_node;
+            let mut number_of_steps = 0;
+
+            while current_node != end_node {
+                for command in &commands {
+                    match self.connections.get(current_node) {
+                        Some(connections) => {
+                            number_of_steps += 1;
+
+                            match command {
+                                command::Command::Left => {
+                                    current_node = &connections.left_connection
+                                }
+                                command::Command::Right => {
+                                    current_node = &connections.right_connection
+                                }
+                            }
+
+                            if current_node == end_node {
+                                break;
+                            }
+                        }
+                        None => {
+                            println!(
+                                "Cannot get number of steps, node {} not found in connections",
+                                current_node
+                            );
+                            return None;
+                        }
+                    }
+                }
+            }
+
+            Some(number_of_steps)
+        } else {
+            println!("Cannot get number of steps, either start or end note are not in network");
+            None
         }
     }
 }

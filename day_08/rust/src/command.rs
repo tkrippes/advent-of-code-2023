@@ -1,4 +1,5 @@
-enum Command {
+#[derive(Clone)]
+pub enum Command {
     Left,
     Right,
 }
@@ -34,5 +35,9 @@ impl Commands {
         }
 
         Some(Commands { commands })
+    }
+
+    pub fn get_commands(&self) -> Vec<Command> {
+        self.commands.clone()
     }
 }

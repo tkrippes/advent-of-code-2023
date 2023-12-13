@@ -7,7 +7,7 @@ mod network;
 
 pub fn part_1(file_name: &str) -> u32 {
     match try_get_commands_and_network(file_name) {
-        Some((commands, network)) => todo!(),
+        Some((commands, network)) => get_number_of_steps(&commands, &network, "AAA", "ZZZ"),
         None => {
             println!("Failed to get commands or network");
             0
@@ -38,6 +38,24 @@ fn try_get_commands_and_network(file_name: &str) -> Option<(Commands, Network)> 
     } else {
         println!("Cannot get either command or network");
         None
+    }
+}
+
+fn get_number_of_steps(
+    commands: &Commands,
+    network: &Network,
+    start_node: &str,
+    end_node: &str,
+) -> u32 {
+    match network.get_number_of_steps(commands, start_node, end_node) {
+        Some(number_of_steps) => number_of_steps,
+        None => {
+            println!(
+                "Unable to get number of steps from {} to {}",
+                start_node, end_node
+            );
+            0
+        }
     }
 }
 
