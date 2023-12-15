@@ -3,6 +3,7 @@ use network::Network;
 use std::fs;
 
 mod command;
+mod math;
 mod network;
 
 pub fn part_1(file_name: &str) -> u64 {
@@ -57,7 +58,7 @@ fn get_number_of_steps_single_start_node(
     start_node: &str,
     end_node: &str,
 ) -> u64 {
-    match network.get_number_of_steps_single_start_node(commands, start_node, end_node) {
+    match network.get_number_of_steps_single_start_node(commands, start_node, end_node, u64::MAX) {
         Some(number_of_steps) => number_of_steps,
         None => {
             println!(

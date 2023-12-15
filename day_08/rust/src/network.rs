@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use super::command;
+use super::math;
 
 type Node = String;
 
@@ -93,6 +94,7 @@ impl Network {
         commands: &command::Commands,
         start_node: &str,
         end_node: &str,
+        max_iteration: u64,
     ) -> Option<u64> {
         if self.connections.contains_key(start_node) && self.connections.contains_key(end_node) {
             let commands = commands.get_commands();
@@ -112,6 +114,14 @@ impl Network {
                                 command::Command::Right => {
                                     current_node = &connections.right_connection
                                 }
+                            }
+
+                            if number_of_steps >= max_iteration {
+                                println!(
+                                    "Cannot find connection between {} and {} in under {} iterations, aborting",
+                                    start_node, end_node, max_iteration
+                                );
+                                return None;
                             }
                         }
                         None => {
@@ -138,46 +148,50 @@ impl Network {
         start_nodes_ending_character: char,
         end_nodes_ending_character: char,
     ) -> Option<u64> {
-        let mut current_nodes = self.get_nodes_ending_in(start_nodes_ending_character);
+        let start_nodes = self.get_nodes_ending_in(start_nodes_ending_character);
+        let end_nodes = self.get_nodes_ending_in(end_nodes_ending_character);
 
-        if !current_nodes.is_empty() {
-            let initial_nodes_size = current_nodes.len();
-            let commands = commands.get_commands();
-            let mut number_of_steps = 0;
+        if !start_nodes.is_empty() && !end_nodes.is_empty() {
+            let mut min_steps_to_end_nodes_list = Vec::new();
+            let max_number_of_iterations = 10000000;
 
-            while !Self::do_all_nodes_end_in(&current_nodes, end_nodes_ending_character) {
-                for command in &commands {
-                    match command {
-                        command::Command::Left => {
-                            current_nodes = current_nodes
-                                .iter()
-                                .filter_map(|node| self.connections.get(*node))
-                                .map(|node_connection| node_connection.left_connection.as_str())
-                                .collect()
+            for start_node in &start_nodes {
+                let mut min_steps_to_end_nodes: Option<u64> = None;
+
+                for end_node in &end_nodes {
+                    if let Some(number_of_steps) = self.get_number_of_steps_single_start_node(
+                        commands,
+                        start_node,
+                        end_node,
+                        max_number_of_iterations,
+                    ) {
+                        if min_steps_to_end_nodes.is_none()
+                            || number_of_steps < min_steps_to_end_nodes.unwrap()
+                        {
+                            min_steps_to_end_nodes = Some(number_of_steps);
                         }
-                        command::Command::Right => {
-                            current_nodes = current_nodes
-                                .iter()
-                                .filter_map(|node| self.connections.get(*node))
-                                .map(|node_connection| node_connection.right_connection.as_str())
-                                .collect()
-                        }
-                    };
+                    }
+                }
 
-                    if current_nodes.len() == initial_nodes_size {
-                        number_of_steps += 1;
-                    } else {
-                        println!("Cannot get number of steps, something went wrong!");
+                match min_steps_to_end_nodes {
+                    Some(min_steps_to_end_nodes) => {
+                        min_steps_to_end_nodes_list.push(min_steps_to_end_nodes)
+                    }
+                    None => {
+                        println!(
+                            "Cannot get number of steps, no path found for starting node {}",
+                            start_node
+                        );
                         return None;
                     }
                 }
             }
 
-            Some(number_of_steps)
+            Some(math::least_common_multiple(&min_steps_to_end_nodes_list))
         } else {
             println!(
-                "Cannot get number of steps, no nodes end with {}",
-                start_nodes_ending_character
+                "Cannot get number of steps, no nodes end with {} or {}",
+                start_nodes_ending_character, end_nodes_ending_character
             );
             None
         }
@@ -189,9 +203,5 @@ impl Network {
             .filter(|node| node.ends_with(character))
             .map(|node| node.as_str())
             .collect()
-    }
-
-    fn do_all_nodes_end_in(nodes: &[&str], character: char) -> bool {
-        nodes.iter().all(|node| node.ends_with(character))
     }
 }
