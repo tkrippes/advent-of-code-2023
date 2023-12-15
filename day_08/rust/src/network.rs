@@ -94,14 +94,14 @@ impl Network {
         commands: &command::Commands,
         start_node: &str,
         end_node: &str,
-        max_iteration: u64,
+        max_number_of_iterations: u64,
     ) -> Option<u64> {
         if self.connections.contains_key(start_node) && self.connections.contains_key(end_node) {
             let commands = commands.get_commands();
             let mut current_node = start_node;
             let mut number_of_steps = 0;
 
-            while current_node != end_node {
+            while current_node != end_node && number_of_steps < max_number_of_iterations {
                 for command in &commands {
                     match self.connections.get(current_node) {
                         Some(connections) => {
@@ -115,14 +115,6 @@ impl Network {
                                     current_node = &connections.right_connection
                                 }
                             }
-
-                            if number_of_steps >= max_iteration {
-                                println!(
-                                    "Cannot find connection between {} and {} in under {} iterations, aborting",
-                                    start_node, end_node, max_iteration
-                                );
-                                return None;
-                            }
                         }
                         None => {
                             println!(
@@ -135,7 +127,15 @@ impl Network {
                 }
             }
 
-            Some(number_of_steps)
+            if number_of_steps < max_number_of_iterations {
+                Some(number_of_steps)
+            } else {
+                println!(
+                    "Cannot get number of steps, cannot find connection between {} and {} in under {} iterations",
+                    start_node, end_node, max_number_of_iterations
+                );
+                None
+            }
         } else {
             println!("Cannot get number of steps, either start or end note are not in network");
             None
