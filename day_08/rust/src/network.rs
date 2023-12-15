@@ -1,4 +1,3 @@
-use regex;
 use std::collections::HashMap;
 
 use super::command;
@@ -56,7 +55,7 @@ impl Network {
     }
 
     fn try_get_connections_regex() -> Result<regex::Regex, regex::Error> {
-        regex::Regex::new(&format!(r"(\w+)+ = \((\w+)+, (\w+)+\)"))
+        regex::Regex::new(r"(\w+)+ = \((\w+)+, (\w+)+\)")
     }
 
     fn tidy_entries(entries: Vec<&str>) -> Vec<&str> {
@@ -89,12 +88,12 @@ impl Network {
         }
     }
 
-    pub fn get_number_of_steps(
+    pub fn get_number_of_steps_single_start_node(
         &self,
         commands: &command::Commands,
         start_node: &str,
         end_node: &str,
-    ) -> Option<u32> {
+    ) -> Option<u64> {
         if self.connections.contains_key(start_node) && self.connections.contains_key(end_node) {
             let commands = commands.get_commands();
             let mut current_node = start_node;
@@ -114,10 +113,6 @@ impl Network {
                                     current_node = &connections.right_connection
                                 }
                             }
-
-                            if current_node == end_node {
-                                break;
-                            }
                         }
                         None => {
                             println!(
@@ -135,5 +130,68 @@ impl Network {
             println!("Cannot get number of steps, either start or end note are not in network");
             None
         }
+    }
+
+    pub fn get_number_of_steps_multiple_start_nodes(
+        &self,
+        commands: &command::Commands,
+        start_nodes_ending_character: char,
+        end_nodes_ending_character: char,
+    ) -> Option<u64> {
+        let mut current_nodes = self.get_nodes_ending_in(start_nodes_ending_character);
+
+        if !current_nodes.is_empty() {
+            let initial_nodes_size = current_nodes.len();
+            let commands = commands.get_commands();
+            let mut number_of_steps = 0;
+
+            while !Self::do_all_nodes_end_in(&current_nodes, end_nodes_ending_character) {
+                for command in &commands {
+                    match command {
+                        command::Command::Left => {
+                            current_nodes = current_nodes
+                                .iter()
+                                .filter_map(|node| self.connections.get(*node))
+                                .map(|node_connection| node_connection.left_connection.as_str())
+                                .collect()
+                        }
+                        command::Command::Right => {
+                            current_nodes = current_nodes
+                                .iter()
+                                .filter_map(|node| self.connections.get(*node))
+                                .map(|node_connection| node_connection.right_connection.as_str())
+                                .collect()
+                        }
+                    };
+
+                    if current_nodes.len() == initial_nodes_size {
+                        number_of_steps += 1;
+                    } else {
+                        println!("Cannot get number of steps, something went wrong!");
+                        return None;
+                    }
+                }
+            }
+
+            Some(number_of_steps)
+        } else {
+            println!(
+                "Cannot get number of steps, no nodes end with {}",
+                start_nodes_ending_character
+            );
+            None
+        }
+    }
+
+    fn get_nodes_ending_in(&self, character: char) -> Vec<&str> {
+        self.connections
+            .keys()
+            .filter(|node| node.ends_with(character))
+            .map(|node| node.as_str())
+            .collect()
+    }
+
+    fn do_all_nodes_end_in(nodes: &[&str], character: char) -> bool {
+        nodes.iter().all(|node| node.ends_with(character))
     }
 }

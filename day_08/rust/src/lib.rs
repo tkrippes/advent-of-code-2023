@@ -5,9 +5,11 @@ use std::fs;
 mod command;
 mod network;
 
-pub fn part_1(file_name: &str) -> u32 {
+pub fn part_1(file_name: &str) -> u64 {
     match try_get_commands_and_network(file_name) {
-        Some((commands, network)) => get_number_of_steps(&commands, &network, "AAA", "ZZZ"),
+        Some((commands, network)) => {
+            get_number_of_steps_single_start_node(&commands, &network, "AAA", "ZZZ")
+        }
         None => {
             println!("Failed to get commands or network");
             0
@@ -15,8 +17,16 @@ pub fn part_1(file_name: &str) -> u32 {
     }
 }
 
-pub fn part_2(file_name: &str) -> u32 {
-    todo!()
+pub fn part_2(file_name: &str) -> u64 {
+    match try_get_commands_and_network(file_name) {
+        Some((commands, network)) => {
+            get_number_of_steps_multiple_start_nodes(&commands, &network, 'A', 'Z')
+        }
+        None => {
+            println!("Failed to get commands or network");
+            0
+        }
+    }
 }
 
 fn try_get_commands_and_network(file_name: &str) -> Option<(Commands, Network)> {
@@ -41,18 +51,40 @@ fn try_get_commands_and_network(file_name: &str) -> Option<(Commands, Network)> 
     }
 }
 
-fn get_number_of_steps(
+fn get_number_of_steps_single_start_node(
     commands: &Commands,
     network: &Network,
     start_node: &str,
     end_node: &str,
-) -> u32 {
-    match network.get_number_of_steps(commands, start_node, end_node) {
+) -> u64 {
+    match network.get_number_of_steps_single_start_node(commands, start_node, end_node) {
         Some(number_of_steps) => number_of_steps,
         None => {
             println!(
                 "Unable to get number of steps from {} to {}",
                 start_node, end_node
+            );
+            0
+        }
+    }
+}
+
+fn get_number_of_steps_multiple_start_nodes(
+    commands: &Commands,
+    network: &Network,
+    start_nodes_ending_character: char,
+    end_nodes_ending_character: char,
+) -> u64 {
+    match network.get_number_of_steps_multiple_start_nodes(
+        commands,
+        start_nodes_ending_character,
+        end_nodes_ending_character,
+    ) {
+        Some(number_of_steps) => number_of_steps,
+        None => {
+            println!(
+                "Unable to get number of steps from all nodes ending with {} to all nodes ending with {}",
+                start_nodes_ending_character, end_nodes_ending_character
             );
             0
         }
