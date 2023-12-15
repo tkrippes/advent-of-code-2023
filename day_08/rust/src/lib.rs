@@ -80,6 +80,7 @@ fn get_number_of_steps_multiple_start_nodes(
         commands,
         start_nodes_ending_character,
         end_nodes_ending_character,
+        10000000,
     ) {
         Some(number_of_steps) => number_of_steps,
         None => {

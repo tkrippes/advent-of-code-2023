@@ -147,13 +147,13 @@ impl Network {
         commands: &command::Commands,
         start_nodes_ending_character: char,
         end_nodes_ending_character: char,
+        max_number_of_iterations: u64,
     ) -> Option<u64> {
         let start_nodes = self.get_nodes_ending_in(start_nodes_ending_character);
         let end_nodes = self.get_nodes_ending_in(end_nodes_ending_character);
 
         if !start_nodes.is_empty() && !end_nodes.is_empty() {
             let mut min_steps_to_end_nodes_list = Vec::new();
-            let max_number_of_iterations = 10000000;
 
             for start_node in &start_nodes {
                 let mut min_steps_to_end_nodes: Option<u64> = None;
