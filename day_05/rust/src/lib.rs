@@ -18,7 +18,7 @@ pub fn part_2(file_name: &str) -> u64 {
     let almanac = try_get_almanac(file_name);
 
     if let Some(almanac) = almanac {
-        get_lowest_location_of_initial_seeds(&almanac, true)
+        get_lowest_location_of_initial_seeds_alternative(&almanac, true)
     } else {
         println!("Failed to get almanac");
         0
@@ -45,6 +45,13 @@ fn get_lowest_location_of_initial_seeds(almanac: &Almanac, consider_seed_range: 
         println!("Failed to get minimum location");
         0
     }
+}
+
+fn get_lowest_location_of_initial_seeds_alternative(
+    almanac: &Almanac,
+    consider_seed_range: bool,
+) -> u64 {
+    almanac.get_lowest_location(consider_seed_range)
 }
 
 #[cfg(test)]

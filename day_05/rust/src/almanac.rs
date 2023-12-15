@@ -48,6 +48,19 @@ impl Ranges {
         let range = self.source_start_range..self.source_start_range + self.range_lengths;
         range.contains(&source)
     }
+
+    fn get_source_from_destination(&self, destination: u64) -> Option<u64> {
+        if self.is_destination_in_range(destination) {
+            Some(destination + self.source_start_range - self.destination_start_range)
+        } else {
+            None
+        }
+    }
+
+    fn is_destination_in_range(&self, destination: u64) -> bool {
+        let range = self.destination_start_range..self.destination_start_range + self.range_lengths;
+        range.contains(&destination)
+    }
 }
 
 struct Map {
@@ -78,6 +91,16 @@ impl Map {
         }
 
         source
+    }
+
+    fn get_source_from_destination(&self, destination: u64) -> u64 {
+        for range in &self.ranges {
+            if let Some(source) = range.get_source_from_destination(destination) {
+                return source;
+            }
+        }
+
+        destination
     }
 }
 
@@ -205,6 +228,32 @@ impl Maps {
         self.humidity_to_location_map
             .get_destination_from_source(humidity)
     }
+
+    fn get_seed_from_location(&self, location: u64) -> u64 {
+        let humidity = self
+            .humidity_to_location_map
+            .get_source_from_destination(location);
+
+        let temperature = self
+            .temperature_to_humidity_map
+            .get_source_from_destination(humidity);
+
+        let light = self
+            .light_to_temperature_map
+            .get_source_from_destination(temperature);
+
+        let water = self.water_to_light_map.get_source_from_destination(light);
+
+        let fertilizer = self
+            .fertilizer_to_water_map
+            .get_source_from_destination(water);
+
+        let soil = self
+            .soil_to_fertilizer_map
+            .get_source_from_destination(fertilizer);
+
+        self.seed_to_soil_map.get_source_from_destination(soil)
+    }
 }
 
 pub struct Almanac {
@@ -212,7 +261,6 @@ pub struct Almanac {
     maps: Maps,
 }
 
-// TODO improve performance for part 2
 impl Almanac {
     pub fn try_build(input: Vec<&str>) -> Option<Self> {
         let mut seeds: Option<Vec<u64>> = None;
@@ -255,9 +303,11 @@ impl Almanac {
     pub fn get_locations_from_seeds(&self, consider_seed_range: bool) -> Vec<u64> {
         let mut locations = Vec::new();
 
-        if let Some(seeds) = self.get_seeds(consider_seed_range) {
-            for seed in seeds {
-                locations.push(self.maps.get_location_from_seed(seed));
+        if let Some(seed_ranges) = self.get_seeds(consider_seed_range) {
+            for seed_range in seed_ranges {
+                for seed in seed_range {
+                    locations.push(self.maps.get_location_from_seed(seed));
+                }
             }
         } else {
             println!("Cannot get locations from seeds");
@@ -266,7 +316,7 @@ impl Almanac {
         locations
     }
 
-    fn get_seeds(&self, consider_seed_range: bool) -> Option<Vec<u64>> {
+    fn get_seeds(&self, consider_seed_range: bool) -> Option<Vec<std::ops::Range<u64>>> {
         if consider_seed_range {
             if self.seeds.len() % 2 == 0 {
                 let mut seeds = Vec::new();
@@ -275,12 +325,7 @@ impl Almanac {
                     let start_seed = *self.seeds.get(i).unwrap();
                     let length = *self.seeds.get(i + 1).unwrap();
 
-                    for j in 0..length {
-                        let seed = start_seed + j;
-                        if !seeds.contains(&seed) {
-                            seeds.push(seed);
-                        }
-                    }
+                    seeds.push(start_seed..start_seed + length);
                 }
 
                 Some(seeds)
@@ -289,7 +334,30 @@ impl Almanac {
                 None
             }
         } else {
-            Some(self.seeds.clone())
+            let mut seeds = Vec::new();
+
+            for seed in &self.seeds {
+                seeds.push(*seed..*seed + 1)
+            }
+
+            Some(seeds)
         }
+    }
+
+    pub fn get_lowest_location(&self, consider_seed_range: bool) -> u64 {
+        let mut location = 0;
+
+        if let Some(seed_ranges) = self.get_seeds(consider_seed_range) {
+            while !seed_ranges
+                .iter()
+                .any(|seed_range| seed_range.contains(&self.maps.get_seed_from_location(location)))
+            {
+                location += 1;
+            }
+        } else {
+            println!("Cannot get lowest location");
+        }
+
+        location
     }
 }
