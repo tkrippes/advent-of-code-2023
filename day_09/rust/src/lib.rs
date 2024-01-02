@@ -5,7 +5,7 @@ mod history;
 
 pub fn part_1(file_name: &str) -> i32 {
     match try_get_histories(file_name) {
-        Some(histories) => get_sum_of_extrapolated_values(histories),
+        Some(histories) => get_sum_of_extrapolated_next_values(histories),
         None => {
             println!("Failed to get histories");
             0
@@ -14,7 +14,13 @@ pub fn part_1(file_name: &str) -> i32 {
 }
 
 pub fn part_2(file_name: &str) -> i32 {
-    todo!()
+    match try_get_histories(file_name) {
+        Some(histories) => get_sum_of_extrapolated_previous_values(histories),
+        None => {
+            println!("Failed to get histories");
+            0
+        }
+    }
 }
 
 fn try_get_histories(file_name: &str) -> Option<Vec<History>> {
@@ -40,10 +46,17 @@ fn try_get_histories(file_name: &str) -> Option<Vec<History>> {
     Some(histories)
 }
 
-fn get_sum_of_extrapolated_values(histories: Vec<History>) -> i32 {
+fn get_sum_of_extrapolated_next_values(histories: Vec<History>) -> i32 {
     histories
         .iter()
-        .map(|history| history.get_predicition_of_next_value())
+        .map(|history| history.get_prediction_of_next_value())
+        .sum()
+}
+
+fn get_sum_of_extrapolated_previous_values(histories: Vec<History>) -> i32 {
+    histories
+        .iter()
+        .map(|history| history.get_prediction_of_previous_value())
         .sum()
 }
 
@@ -60,6 +73,6 @@ mod tests {
     #[test]
     fn test_input_part_2() {
         let result = part_2("../input/test_input.txt");
-        assert_eq!(result, 0);
+        assert_eq!(result, 2);
     }
 }

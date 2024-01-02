@@ -19,16 +19,28 @@ impl History {
         Some(History { values })
     }
 
-    pub fn get_predicition_of_next_value(&self) -> i32 {
+    pub fn get_prediction_of_next_value(&self) -> i32 {
         let mut sequences = vec![self.values.clone()];
 
         while Self::is_there_a_non_zero_value_in_last_sequence(&sequences) {
             Self::fill_sequences(&mut sequences);
         }
 
-        Self::fill_placeholders(&mut sequences);
+        Self::fill_back_placeholders(&mut sequences);
 
         *sequences.first().unwrap().last().unwrap()
+    }
+
+    pub fn get_prediction_of_previous_value(&self) -> i32 {
+        let mut sequences = vec![self.values.clone()];
+
+        while Self::is_there_a_non_zero_value_in_last_sequence(&sequences) {
+            Self::fill_sequences(&mut sequences);
+        }
+
+        Self::fill_front_placeholders(&mut sequences);
+
+        *sequences.first().unwrap().first().unwrap()
     }
 
     fn is_there_a_non_zero_value_in_last_sequence(sequences: &[Vec<i32>]) -> bool {
@@ -49,17 +61,31 @@ impl History {
         sequences.push(next_sequence);
     }
 
-    fn fill_placeholders(sequences: &mut Vec<Vec<i32>>) {
+    fn fill_back_placeholders(sequences: &mut Vec<Vec<i32>>) {
         sequences.last_mut().unwrap().push(0);
 
         for index in (1..=sequences.len() - 1).rev() {
-            let last_current_value = *sequences.get(index).unwrap().last().unwrap();
             let last_previous_value = *sequences.get(index - 1).unwrap().last().unwrap();
+            let last_current_value = *sequences.get(index).unwrap().last().unwrap();
 
             sequences
                 .get_mut(index - 1)
                 .unwrap()
-                .push(last_current_value + last_previous_value)
+                .push(last_previous_value + last_current_value)
+        }
+    }
+
+    fn fill_front_placeholders(sequences: &mut Vec<Vec<i32>>) {
+        sequences.last_mut().unwrap().insert(0, 0);
+
+        for index in (1..=sequences.len() - 1).rev() {
+            let first_previous_value = *sequences.get(index - 1).unwrap().first().unwrap();
+            let first_current_value = *sequences.get(index).unwrap().first().unwrap();
+
+            sequences
+                .get_mut(index - 1)
+                .unwrap()
+                .insert(0, first_previous_value - first_current_value)
         }
     }
 }
